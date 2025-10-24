@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Leaf, User, LogOut, Search, ChefHat, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,9 +9,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
+import AuthModal from '@/components/AuthModal';
 
 export default function Layout() {
   const { user, signOut } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,13 +40,15 @@ export default function Layout() {
                 Alimentos
               </Link>
               
-              <Link
-                to="/recetas"
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ChefHat className="h-4 w-4" />
-                Mis Recetas
-              </Link>
+              {user && (
+                <Link
+                  to="/mis-recetas"
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ChefHat className="h-4 w-4" />
+                  Mis Recetas
+                </Link>
+              )}
               
               <Link
                 to="/comunidad"
@@ -76,6 +81,12 @@ export default function Layout() {
                       {user.email}
                     </div>
                     <DropdownMenuItem asChild>
+                      <Link to="/mis-recetas" className="cursor-pointer">
+                        <ChefHat className="mr-2 h-4 w-4" />
+                        Mis Recetas
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/perfil" className="cursor-pointer">
                         <User className="mr-2 h-4 w-4" />
                         Mi Perfil
@@ -88,7 +99,7 @@ export default function Layout() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button onClick={() => {}} variant="default">
+                <Button onClick={() => setShowAuthModal(true)} variant="default">
                   Iniciar Sesión
                 </Button>
               )}
@@ -115,6 +126,8 @@ export default function Layout() {
           </div>
         </div>
       </footer>
+
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
     </div>
   );
 }
