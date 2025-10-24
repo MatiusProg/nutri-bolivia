@@ -96,19 +96,19 @@ export default function RecipeBuilder() {
   const calculateNutrients = () => {
     const totals = {
       energia_kcal: 0,
-      proteina_g: 0,
-      grasa_total_g: 0,
-      carbohidratos_totales_g: 0,
-      fibra_dietetica_g: 0,
+      proteinas_g: 0,
+      grasas_g: 0,
+      hidratoscarbonototal_g: 0,
+      fibracruda_g: 0,
     };
 
     ingredients.forEach(({ alimento, cantidad_g }) => {
       const factor = cantidad_g / 100;
       totals.energia_kcal += (alimento.energia_kcal || 0) * factor;
-      totals.proteina_g += (alimento.proteina_g || 0) * factor;
-      totals.grasa_total_g += (alimento.grasa_total_g || 0) * factor;
-      totals.carbohidratos_totales_g += (alimento.carbohidratos_totales_g || 0) * factor;
-      totals.fibra_dietetica_g += (alimento.fibra_dietetica_g || 0) * factor;
+      totals.proteinas_g += (alimento.proteinas_g || 0) * factor;
+      totals.grasas_g += (alimento.grasas_g || 0) * factor;
+      totals.hidratoscarbonototal_g += (alimento.hidratoscarbonototal_g || 0) * factor;
+      totals.fibracruda_g += (alimento.fibracruda_g || 0) * factor;
     });
 
     return totals;
@@ -159,7 +159,7 @@ export default function RecipeBuilder() {
     try {
       const nutrientes = calculateNutrients();
       const ingredientesData = ingredients.map(({ alimento, cantidad_g }) => ({
-        alimento_id: alimento.id,
+        alimento_id: alimento.id_alimento,
         nombre: alimento.nombre_alimento,
         cantidad_g,
       }));
@@ -277,14 +277,14 @@ export default function RecipeBuilder() {
                       <CommandGroup>
                         {alimentos.map((alimento) => (
                           <CommandItem
-                            key={alimento.id}
+                            key={alimento.id_alimento}
                             onSelect={() => addIngredient(alimento)}
                             className="cursor-pointer"
                           >
                             <div>
                               <p className="font-medium">{alimento.nombre_alimento}</p>
                               <p className="text-xs text-muted-foreground">
-                                {alimento.grupo_alimento}
+                                {alimento.grupo_alimenticio}
                               </p>
                             </div>
                           </CommandItem>
@@ -369,22 +369,22 @@ export default function RecipeBuilder() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Proteínas</span>
-                    <span className="font-semibold">{nutrients.proteina_g.toFixed(1)}g</span>
+                    <span className="font-semibold">{nutrients.proteinas_g.toFixed(1)}g</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Carbohidratos</span>
                     <span className="font-semibold">
-                      {nutrients.carbohidratos_totales_g.toFixed(1)}g
+                      {nutrients.hidratoscarbonototal_g.toFixed(1)}g
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Grasas</span>
-                    <span className="font-semibold">{nutrients.grasa_total_g.toFixed(1)}g</span>
+                    <span className="font-semibold">{nutrients.grasas_g.toFixed(1)}g</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Fibra</span>
                     <span className="font-semibold">
-                      {nutrients.fibra_dietetica_g.toFixed(1)}g
+                      {nutrients.fibracruda_g.toFixed(1)}g
                     </span>
                   </div>
                 </div>

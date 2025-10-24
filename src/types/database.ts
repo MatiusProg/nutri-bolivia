@@ -11,35 +11,28 @@ export interface Database {
     Tables: {
       alimentos: {
         Row: {
-          id: string
+          id_alimento: string
           nombre_alimento: string
-          grupo_alimento: string | null
+          grupo_alimenticio: string | null
           energia_kcal: number | null
-          proteina_g: number | null
-          grasa_total_g: number | null
-          carbohidratos_totales_g: number | null
-          fibra_dietetica_g: number | null
-          azucares_totales_g: number | null
+          humedad_g: number | null
+          proteinas_g: number | null
+          grasas_g: number | null
+          hidratoscarbonototal_g: number | null
+          fibracruda_g: number | null
+          ceniza_g: number | null
           calcio_mg: number | null
-          hierro_mg: number | null
-          magnesio_mg: number | null
           fosforo_mg: number | null
-          potasio_mg: number | null
-          sodio_mg: number | null
-          zinc_mg: number | null
-          vitamina_c_mg: number | null
+          hierro_mg: number | null
+          vita_mcg: number | null
           tiamina_mg: number | null
           riboflavina_mg: number | null
           niacina_mg: number | null
-          vitamina_b6_mg: number | null
-          folato_ug: number | null
-          vitamina_b12_ug: number | null
-          vitamina_a_ug: number | null
-          vitamina_e_mg: number | null
-          vitamina_d_ug: number | null
+          vitc_mg: number | null
+          estado_validacion: string | null
           created_at?: string
         }
-        Insert: Omit<Database['public']['Tables']['alimentos']['Row'], 'id' | 'created_at'>
+        Insert: Omit<Database['public']['Tables']['alimentos']['Row'], 'id_alimento' | 'created_at'>
         Update: Partial<Database['public']['Tables']['alimentos']['Insert']>
       }
       perfiles: {

@@ -68,38 +68,30 @@ export default function AlimentoDetailModal({
       categoria: 'Macronutrientes Principales',
       items: [
         { nombre: 'Energía', valor: alimento.energia_kcal, unidad: 'kcal', icono: '🔥' },
-        { nombre: 'Proteínas', valor: alimento.proteina_g, unidad: 'g', icono: '💪' },
-        { nombre: 'Grasas totales', valor: alimento.grasa_total_g, unidad: 'g', icono: '🥑' },
-        { nombre: 'Carbohidratos totales', valor: alimento.carbohidratos_totales_g, unidad: 'g', icono: '🌾' },
-        { nombre: 'Fibra dietética', valor: alimento.fibra_dietetica_g, unidad: 'g', icono: '🌿' },
-        { nombre: 'Azúcares totales', valor: alimento.azucares_totales_g, unidad: 'g', icono: '🍯' },
+        { nombre: 'Humedad', valor: alimento.humedad_g, unidad: 'g', icono: '💧' },
+        { nombre: 'Proteínas', valor: alimento.proteinas_g, unidad: 'g', icono: '💪' },
+        { nombre: 'Grasas', valor: alimento.grasas_g, unidad: 'g', icono: '🥑' },
+        { nombre: 'Carbohidratos', valor: alimento.hidratoscarbonototal_g, unidad: 'g', icono: '🌾' },
+        { nombre: 'Fibra cruda', valor: alimento.fibracruda_g, unidad: 'g', icono: '🌿' },
+        { nombre: 'Ceniza', valor: alimento.ceniza_g, unidad: 'g', icono: '⚪' },
       ],
     },
     {
       categoria: 'Minerales',
       items: [
         { nombre: 'Calcio', valor: alimento.calcio_mg, unidad: 'mg', icono: '🦴' },
-        { nombre: 'Hierro', valor: alimento.hierro_mg, unidad: 'mg', icono: '⚡' },
-        { nombre: 'Magnesio', valor: alimento.magnesio_mg, unidad: 'mg', icono: '✨' },
         { nombre: 'Fósforo', valor: alimento.fosforo_mg, unidad: 'mg', icono: '💎' },
-        { nombre: 'Potasio', valor: alimento.potasio_mg, unidad: 'mg', icono: '🔋' },
-        { nombre: 'Sodio', valor: alimento.sodio_mg, unidad: 'mg', icono: '🧂' },
-        { nombre: 'Zinc', valor: alimento.zinc_mg, unidad: 'mg', icono: '🛡️' },
+        { nombre: 'Hierro', valor: alimento.hierro_mg, unidad: 'mg', icono: '⚡' },
       ],
     },
     {
       categoria: 'Vitaminas',
       items: [
-        { nombre: 'Vitamina A', valor: alimento.vitamina_a_ug, unidad: 'μg', icono: '👁️' },
-        { nombre: 'Vitamina C', valor: alimento.vitamina_c_mg, unidad: 'mg', icono: '🍊' },
-        { nombre: 'Vitamina D', valor: alimento.vitamina_d_ug, unidad: 'μg', icono: '☀️' },
-        { nombre: 'Vitamina E', valor: alimento.vitamina_e_mg, unidad: 'mg', icono: '🌰' },
+        { nombre: 'Vitamina A', valor: alimento.vita_mcg, unidad: 'μg', icono: '👁️' },
         { nombre: 'Tiamina (B1)', valor: alimento.tiamina_mg, unidad: 'mg', icono: '🅱️' },
         { nombre: 'Riboflavina (B2)', valor: alimento.riboflavina_mg, unidad: 'mg', icono: '🅱️' },
         { nombre: 'Niacina (B3)', valor: alimento.niacina_mg, unidad: 'mg', icono: '🅱️' },
-        { nombre: 'Vitamina B6', valor: alimento.vitamina_b6_mg, unidad: 'mg', icono: '🅱️' },
-        { nombre: 'Folato (B9)', valor: alimento.folato_ug, unidad: 'μg', icono: '🅱️' },
-        { nombre: 'Vitamina B12', valor: alimento.vitamina_b12_ug, unidad: 'μg', icono: '🅱️' },
+        { nombre: 'Vitamina C', valor: alimento.vitc_mg, unidad: 'mg', icono: '🍊' },
       ],
     },
   ];
@@ -110,9 +102,9 @@ export default function AlimentoDetailModal({
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-start justify-between gap-4">
             <span>{alimento.nombre_alimento}</span>
-            {alimento.grupo_alimento && (
+            {alimento.grupo_alimenticio && (
               <Badge variant="secondary" className="text-sm">
-                {alimento.grupo_alimento}
+                {alimento.grupo_alimenticio}
               </Badge>
             )}
           </DialogTitle>

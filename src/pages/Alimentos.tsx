@@ -106,7 +106,7 @@ export default function Alimentos() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-up">
             {alimentos.map((alimento, index) => (
               <Card
-                key={alimento.id}
+                key={alimento.id_alimento}
                 className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
                 style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => handleAlimentoClick(alimento)}
@@ -116,9 +116,9 @@ export default function Alimentos() {
                     <h3 className="font-semibold text-lg mb-2 text-foreground">
                       {alimento.nombre_alimento}
                     </h3>
-                    {alimento.grupo_alimento && (
+                    {alimento.grupo_alimenticio && (
                       <Badge variant="secondary" className="mb-2">
-                        {alimento.grupo_alimento}
+                        {alimento.grupo_alimenticio}
                       </Badge>
                     )}
                   </div>
@@ -138,7 +138,7 @@ export default function Alimentos() {
                       <div>
                         <p className="text-xs text-muted-foreground">Proteínas</p>
                         <p className="font-semibold">
-                          {alimento.proteina_g?.toFixed(1) || 0}g
+                          {alimento.proteinas_g?.toFixed(1) || 0}g
                         </p>
                       </div>
                     </div>
@@ -147,7 +147,7 @@ export default function Alimentos() {
                       <div>
                         <p className="text-xs text-muted-foreground">Grasas</p>
                         <p className="font-semibold">
-                          {alimento.grasa_total_g?.toFixed(1) || 0}g
+                          {alimento.grasas_g?.toFixed(1) || 0}g
                         </p>
                       </div>
                     </div>
@@ -156,7 +156,7 @@ export default function Alimentos() {
                       <div>
                         <p className="text-xs text-muted-foreground">Carbohidratos</p>
                         <p className="font-semibold">
-                          {alimento.carbohidratos_totales_g?.toFixed(1) || 0}g
+                          {alimento.hidratoscarbonototal_g?.toFixed(1) || 0}g
                         </p>
                       </div>
                     </div>
