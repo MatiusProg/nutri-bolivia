@@ -124,29 +124,41 @@ export default function Alimentos() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">Energía</p>
-                      <p className="font-semibold text-primary">
-                        {alimento.energia_kcal?.toFixed(0) || 0} kcal
-                      </p>
+                    <div className="flex items-center gap-2 p-2 bg-primary/5 rounded-lg">
+                      <span className="text-lg">🔥</span>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Energía</p>
+                        <p className="font-semibold text-primary">
+                          {alimento.energia_kcal?.toFixed(0) || 0} kcal
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">Proteína</p>
-                      <p className="font-semibold">
-                        {alimento.proteina_g?.toFixed(1) || 0}g
-                      </p>
+                    <div className="flex items-center gap-2 p-2 bg-secondary/30 rounded-lg">
+                      <span className="text-lg">💪</span>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Proteínas</p>
+                        <p className="font-semibold">
+                          {alimento.proteina_g?.toFixed(1) || 0}g
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">Carbohidratos</p>
-                      <p className="font-semibold">
-                        {alimento.carbohidratos_totales_g?.toFixed(1) || 0}g
-                      </p>
+                    <div className="flex items-center gap-2 p-2 bg-secondary/30 rounded-lg">
+                      <span className="text-lg">🥑</span>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Grasas</p>
+                        <p className="font-semibold">
+                          {alimento.grasa_total_g?.toFixed(1) || 0}g
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground">Grasa</p>
-                      <p className="font-semibold">
-                        {alimento.grasa_total_g?.toFixed(1) || 0}g
-                      </p>
+                    <div className="flex items-center gap-2 p-2 bg-secondary/30 rounded-lg">
+                      <span className="text-lg">🌾</span>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Carbohidratos</p>
+                        <p className="font-semibold">
+                          {alimento.carbohidratos_totales_g?.toFixed(1) || 0}g
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
