@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import AlimentoDetailModal from '@/components/AlimentoDetailModal';
 
 export default function Alimentos() {
   const [alimentos, setAlimentos] = useState<Alimento[]>([]);
@@ -14,6 +15,8 @@ export default function Alimentos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedAlimento, setSelectedAlimento] = useState<Alimento | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
   const itemsPerPage = 20;
 
@@ -50,6 +53,11 @@ export default function Alimentos() {
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setPage(1);
+  };
+
+  const handleAlimentoClick = (alimento: Alimento) => {
+    setSelectedAlimento(alimento);
+    setModalOpen(true);
   };
 
   return (
@@ -101,7 +109,7 @@ export default function Alimentos() {
                 key={alimento.id}
                 className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
                 style={{ animationDelay: `${index * 50}ms` }}
-                onClick={() => navigate(`/alimento/${alimento.id}`)}
+                onClick={() => handleAlimentoClick(alimento)}
               >
                 <div className="space-y-4">
                   <div>
@@ -179,6 +187,13 @@ export default function Alimentos() {
           Crear Receta
         </Button>
       </div>
+
+      {/* Modal de detalles del alimento */}
+      <AlimentoDetailModal
+        alimento={selectedAlimento}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
     </div>
   );
 }
