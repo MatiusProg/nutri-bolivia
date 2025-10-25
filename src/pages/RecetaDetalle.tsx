@@ -85,31 +85,49 @@ export default function RecetaDetalle() {
 
   const cargarReceta = async () => {
     try {
-      const { data, error } = await (supabase as any)
+      // 1. Obtener receta sin join
+      const { data: recetaData, error: recetaError } = await supabase
         .from('recetas')
-        .select('*, perfil:usuario_id (nombre_completo, avatar_url, email)')
+        .select('*')
         .eq('id', id)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!data) {
-        toast({
-          title: 'Receta no encontrada',
+        .single();
+  
+      if (recetaError) throw recetaError;
+      if (!recetaData) {
+        toast({ 
+          title: 'Receta no encontrada', 
           description: 'La receta que buscas no existe',
-          variant: 'destructive',
+          variant: 'destructive' 
         });
         navigate('/comunidad');
         return;
       }
-
-      setReceta(data);
-      await cargarDetalleIngredientes(data.ingredientes);
+  
+      // 2. Obtener perfil por separado
+      const { data: perfilData, error: perfilError } = await supabase
+        .from('perfiles')
+        .select('nombre_completo, avatar_url, email')
+        .eq('id', recetaData.usuario_id)
+        .single();
+  
+      // 3. Combinar datos manualmente
+      const recetaCompleta = {
+        ...recetaData,
+        perfil: perfilData || { 
+          nombre_completo: 'Usuario', 
+          avatar_url: null, 
+          email: null 
+        }
+      };
+  
+      setReceta(recetaCompleta);
+      await cargarDetalleIngredientes(recetaData.ingredientes);
     } catch (error: any) {
       console.error('Error:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'No se pudo cargar la receta',
-        variant: 'destructive',
+      toast({ 
+        title: 'Error', 
+        description: error.message || 'No se pudo cargar la receta', 
+        variant: 'destructive' 
       });
     } finally {
       setLoading(false);
