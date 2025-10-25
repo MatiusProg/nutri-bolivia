@@ -107,6 +107,42 @@ export interface Database {
         }
         Update: Partial<Database['public']['Tables']['recetas_interacciones']['Insert']>
       }
+      recetas_calificaciones: {
+        Row: {
+          id: string
+          usuario_id: string
+          receta_id: string
+          calificacion: number
+          created_at: string
+        }
+        Insert: {
+          usuario_id: string
+          receta_id: string
+          calificacion: number
+        }
+        Update: Partial<Database['public']['Tables']['recetas_calificaciones']['Insert']>
+      }
+      notificaciones: {
+        Row: {
+          id: string
+          usuario_id: string
+          tipo: 'like' | 'guardado' | 'calificacion' | 'comentario'
+          titulo: string
+          mensaje: string
+          leida: boolean
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          usuario_id: string
+          tipo: 'like' | 'guardado' | 'calificacion' | 'comentario'
+          titulo: string
+          mensaje: string
+          leida?: boolean
+          metadata?: Json | null
+        }
+        Update: Partial<Database['public']['Tables']['notificaciones']['Insert']>
+      }
     }
   }
 }
@@ -115,3 +151,5 @@ export type Alimento = Database['public']['Tables']['alimentos']['Row'];
 export type Perfil = Database['public']['Tables']['perfiles']['Row'];
 export type Receta = Database['public']['Tables']['recetas']['Row'];
 export type Interaccion = Database['public']['Tables']['recetas_interacciones']['Row'];
+export type Calificacion = Database['public']['Tables']['recetas_calificaciones']['Row'];
+export type Notificacion = Database['public']['Tables']['notificaciones']['Row'];
