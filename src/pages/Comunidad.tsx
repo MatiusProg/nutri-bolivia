@@ -40,17 +40,21 @@ export default function Comunidad() {
 
   const loadRecetas = async () => {
     try {
-      const { data, error } = await (supabase as any)
-        .from('recetas')
-        .select(`*, perfil:usuario_id (nombre_completo, avatar_url, email)`)
-        .eq('visibilidad', 'publica')
+      // USAR LA VISTA recetas_comunidad en lugar de join manual
+      const { data, error } = await supabase
+        .from('recetas_comunidad')  // ← CAMBIAR AQUÍ
+        .select('*')
         .order('created_at', { ascending: false });
-
+  
       if (error) throw error;
-      setRecetas((data as any) || []);
+      setRecetas(data || []);
     } catch (error) {
       console.error('Error:', error);
-      toast({ title: 'Error', description: 'No se pudieron cargar las recetas', variant: 'destructive' });
+      toast({ 
+        title: 'Error', 
+        description: 'No se pudieron cargar las recetas', 
+        variant: 'destructive' 
+      });
     } finally {
       setLoading(false);
     }
