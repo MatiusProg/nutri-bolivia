@@ -38,24 +38,29 @@ export default function Comunidad() {
     }
   }, [user, recetas]);
 
-  const loadRecetas = async () => {
+    const loadRecetas = async () => {
     try {
-      // USAR LA VISTA recetas_comunidad en lugar de join manual
       const { data, error } = await supabase
-        .from('recetas_comunidad')  // ← CAMBIAR AQUÍ
+        .from('recetas_comunidad')
         .select('*')
         .order('created_at', { ascending: false });
   
       if (error) throw error;
-       // DEBUG TEMPORAL
-      console.log('✅ Datos recibidos de recetas_comunidad:', data);
-      console.log('🔍 Estructura primera receta:', data?.[0]);
-      console.log('📊 Total de recetas:', data?.length);
-      
-      setRecetas(data || []);
+  
+      // ADAPTAR datos de la vista al tipo esperado
+      const recetasAdaptadas = data?.map(receta => ({
+        ...receta,
+        perfil: {
+          nombre_completo: receta.autor_nombre,
+          avatar_url: receta.autor_avatar,
+          email: '' // o obtener de otra fuente si está disponible
+        }
+      })) || [];
+  
+      console.log('✅ Recetas adaptadas:', recetasAdaptadas);
+      setRecetas(recetasAdaptadas);
     } catch (error) {
       console.error('❌ Error:', error);
-      setRecetas(data || []);
       toast({ 
         title: 'Error', 
         description: 'No se pudieron cargar las recetas', 
