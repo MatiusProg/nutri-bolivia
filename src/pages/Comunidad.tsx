@@ -1,75 +1,54 @@
-import { useState, useEffect } from 'react';
-import { Users, Heart, Bookmark, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Users, Heart, Bookmark, Loader2, Search, SlidersHorizontal, Clock, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
-
-interface RecetaPublica {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  nutrientes_totales: {
-    energia_kcal: number;
-    proteina_g: number;
-    grasa_total_g: number;
-    carbohidratos_totales_g: number;
-  };
-  likes_count: number;
-  guardados_count: number;
-  created_at: string;
-  perfiles: {
-    nombre_completo: string;
-    avatar_url: string;
-  };
-  usuario_id: string;
-}
-
-interface UserInteraction {
-  liked: boolean;
-  saved: boolean;
-}
+import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
+import { IRecetaConPerfil, IInteraccionUsuario, TDificultad, DIFICULTADES } from '@/types/receta.types';
 
 export default function Comunidad() {
   const { user } = useAuth();
-  const [recetas, setRecetas] = useState<RecetaPublica[]>([]);
-  const [interactions, setInteractions] = useState<Record<string, UserInteraction>>({});
+  const [recetas, setRecetas] = useState<IRecetaConPerfil[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [userInteractions, setUserInteractions] = useState<Record<string, IInteraccionUsuario>>({});
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  
+  // Estados de filtros
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroDificultad, setFiltroDificultad] = useState<TDificultad | 'todas'>('todas');
+  const [ordenarPor, setOrdenarPor] = useState<'fecha' | 'popularidad' | 'tiempo'>('fecha');
 
   useEffect(() => {
     loadRecetas();
+  }, []);
+
+  useEffect(() => {
     if (user) {
       loadUserInteractions();
     }
-  }, [user]);
+  }, [user, recetas]);
 
   const loadRecetas = async () => {
     try {
       const { data, error } = await supabase
         .from('recetas')
-        .select(`
-          *,
-          perfiles:usuario_id (
-            nombre_completo,
-            avatar_url
-          )
-        `)
+        .select(`*, perfil:usuario_id (nombre_completo, avatar_url, email)`)
         .eq('visibilidad', 'publica')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRecetas(data || []);
+      setRecetas((data as any) || []);
     } catch (error) {
-      console.error('Error cargando recetas:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudieron cargar las recetas',
-        variant: 'destructive',
-      });
+      console.error('Error:', error);
+      toast({ title: 'Error', description: 'No se pudieron cargar las recetas', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -77,256 +56,167 @@ export default function Comunidad() {
 
   const loadUserInteractions = async () => {
     if (!user) return;
-
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('recetas_interacciones')
-        .select('receta_id, ha_dado_like, ha_guardado')
+        .select('receta_id, tipo')
         .eq('usuario_id', user.id);
 
-      if (error) throw error;
-
-      const interactionsMap: Record<string, UserInteraction> = {};
-      data?.forEach(item => {
-        interactionsMap[item.receta_id] = {
-          liked: item.ha_dado_like,
-          saved: item.ha_guardado,
-        };
+      const interactions: Record<string, IInteraccionUsuario> = {};
+      data?.forEach((i) => {
+        if (!interactions[i.receta_id]) interactions[i.receta_id] = { hasLiked: false, hasSaved: false };
+        if (i.tipo === 'like') interactions[i.receta_id].hasLiked = true;
+        if (i.tipo === 'guardar') interactions[i.receta_id].hasSaved = true;
       });
-
-      setInteractions(interactionsMap);
+      setUserInteractions(interactions);
     } catch (error) {
-      console.error('Error cargando interacciones:', error);
+      console.error('Error:', error);
     }
   };
 
   const handleLike = async (recetaId: string) => {
     if (!user) {
-      toast({
-        title: 'Inicia sesión',
-        description: 'Debes iniciar sesión para dar like',
-        variant: 'destructive',
-      });
+      toast({ title: 'Inicia sesión', description: 'Debes iniciar sesión para dar like', variant: 'destructive' });
       return;
     }
 
-    setActionLoading(recetaId + '-like');
-    const currentLiked = interactions[recetaId]?.liked || false;
+    const hasLiked = userInteractions[recetaId]?.hasLiked || false;
+    setActionLoading({ ...actionLoading, [`like-${recetaId}`]: true });
 
     try {
-      if (currentLiked) {
-        // Remove like
-        await supabase
-          .from('recetas_interacciones')
-          .update({ ha_dado_like: false })
-          .eq('usuario_id', user.id)
-          .eq('receta_id', recetaId);
+      if (hasLiked) {
+        await supabase.from('recetas_interacciones').delete().eq('receta_id', recetaId).eq('usuario_id', user.id).eq('tipo', 'like');
+        setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasLiked: false } });
+        setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_likes: Math.max(0, r.contador_likes - 1) } : r));
       } else {
-        // Add like
-        await supabase
-          .from('recetas_interacciones')
-          .upsert({
-            usuario_id: user.id,
-            receta_id: recetaId,
-            ha_dado_like: true,
-          });
+        await supabase.from('recetas_interacciones').insert({ receta_id: recetaId, usuario_id: user.id, tipo: 'like' });
+        setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasLiked: true } });
+        setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_likes: r.contador_likes + 1 } : r));
       }
-
-      setInteractions({
-        ...interactions,
-        [recetaId]: {
-          ...interactions[recetaId],
-          liked: !currentLiked,
-        },
-      });
-
-      // Update local count
-      setRecetas(recetas.map(r => 
-        r.id === recetaId 
-          ? { ...r, likes_count: r.likes_count + (currentLiked ? -1 : 1) }
-          : r
-      ));
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'No se pudo dar like',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
-      setActionLoading(null);
+      setActionLoading({ ...actionLoading, [`like-${recetaId}`]: false });
     }
   };
 
   const handleSave = async (recetaId: string) => {
     if (!user) {
-      toast({
-        title: 'Inicia sesión',
-        description: 'Debes iniciar sesión para guardar recetas',
-        variant: 'destructive',
-      });
+      toast({ title: 'Inicia sesión', description: 'Debes iniciar sesión para guardar', variant: 'destructive' });
       return;
     }
 
-    setActionLoading(recetaId + '-save');
-    const currentSaved = interactions[recetaId]?.saved || false;
+    const hasSaved = userInteractions[recetaId]?.hasSaved || false;
+    setActionLoading({ ...actionLoading, [`save-${recetaId}`]: true });
 
     try {
-      if (currentSaved) {
-        await supabase
-          .from('recetas_interacciones')
-          .update({ ha_guardado: false })
-          .eq('usuario_id', user.id)
-          .eq('receta_id', recetaId);
+      if (hasSaved) {
+        await supabase.from('recetas_interacciones').delete().eq('receta_id', recetaId).eq('usuario_id', user.id).eq('tipo', 'guardar');
+        setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasSaved: false } });
+        setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_guardados: Math.max(0, r.contador_guardados - 1) } : r));
       } else {
-        await supabase
-          .from('recetas_interacciones')
-          .upsert({
-            usuario_id: user.id,
-            receta_id: recetaId,
-            ha_guardado: true,
-          });
+        await supabase.from('recetas_interacciones').insert({ receta_id: recetaId, usuario_id: user.id, tipo: 'guardar' });
+        setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasSaved: true } });
+        setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_guardados: r.contador_guardados + 1 } : r));
       }
-
-      setInteractions({
-        ...interactions,
-        [recetaId]: {
-          ...interactions[recetaId],
-          saved: !currentSaved,
-        },
-      });
-
-      toast({
-        title: currentSaved ? 'Receta removida' : 'Receta guardada',
-        description: currentSaved ? 'Se removió de tus guardados' : 'Se guardó en tu colección',
-      });
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'No se pudo guardar',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
-      setActionLoading(null);
+      setActionLoading({ ...actionLoading, [`save-${recetaId}`]: false });
     }
   };
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const recetasFiltradas = useMemo(() => {
+    let resultado = [...recetas];
+    if (busqueda.trim()) {
+      const b = busqueda.toLowerCase();
+      resultado = resultado.filter(r => r.nombre.toLowerCase().includes(b) || r.descripcion?.toLowerCase().includes(b));
+    }
+    if (filtroDificultad !== 'todas') resultado = resultado.filter(r => r.dificultad === filtroDificultad);
+    resultado.sort((a, b) => {
+      if (ordenarPor === 'popularidad') return (b.contador_likes + b.contador_guardados) - (a.contador_likes + a.contador_guardados);
+      if (ordenarPor === 'tiempo') return (a.tiempo_preparacion || 9999) - (b.tiempo_preparacion || 9999);
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+    return resultado;
+  }, [recetas, busqueda, filtroDificultad, ordenarPor]);
+
+  if (loading) return <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-3 bg-primary/10 rounded-xl">
-            <Users className="h-8 w-8 text-primary" />
-          </div>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-primary/10 rounded-xl"><Users className="h-8 w-8 text-primary" /></div>
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Recetas de la Comunidad
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Descubre recetas creadas por otros usuarios
-            </p>
+            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">Comunidad</h1>
+            <p className="text-muted-foreground mt-1">Descubre recetas compartidas</p>
           </div>
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-4">
+          <div className="col-span-2 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar recetas..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="pl-10" />
+          </div>
+          <Select value={filtroDificultad} onValueChange={(v) => setFiltroDificultad(v as any)}>
+            <SelectTrigger><SelectValue placeholder="Dificultad" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas</SelectItem>
+              {Object.entries(DIFICULTADES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={ordenarPor} onValueChange={(v) => setOrdenarPor(v as any)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fecha">Más recientes</SelectItem>
+              <SelectItem value="popularidad">Más populares</SelectItem>
+              <SelectItem value="tiempo">Menos tiempo</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {recetas.length === 0 ? (
+      {recetasFiltradas.length === 0 ? (
         <Card className="p-12 text-center">
-          <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-          <h3 className="text-xl font-semibold mb-2">No hay recetas públicas aún</h3>
-          <p className="text-muted-foreground">
-            Sé el primero en compartir una receta con la comunidad
-          </p>
+          <ChefHat className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+          <h3 className="text-xl font-semibold mb-2">No se encontraron recetas</h3>
         </Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recetas.map((receta) => {
-            const userLiked = interactions[receta.id]?.liked || false;
-            const userSaved = interactions[receta.id]?.saved || false;
-
-            return (
-              <Card key={receta.id} className="p-6 hover:shadow-lg transition-all">
-                {/* Creator Info */}
-                <div className="flex items-center gap-3 mb-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={receta.perfiles?.avatar_url} />
-                    <AvatarFallback>
-                      {receta.perfiles?.nombre_completo?.charAt(0) || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">
-                      {receta.perfiles?.nombre_completo || 'Usuario'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(receta.created_at).toLocaleDateString('es-BO')}
-                    </p>
+          {recetasFiltradas.map((receta) => (
+            <Card key={receta.id} className="p-6 hover:shadow-lg transition-all flex flex-col">
+              <div className="flex items-center gap-3 mb-4">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={receta.perfil?.avatar_url || undefined} />
+                  <AvatarFallback>{receta.perfil?.nombre_completo?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{receta.perfil?.nombre_completo || receta.perfil?.email || 'Usuario'}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {receta.dificultad && <Badge variant="outline" className="text-xs">{DIFICULTADES[receta.dificultad]}</Badge>}
+                    {receta.tiempo_preparacion && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{receta.tiempo_preparacion} min</span>}
                   </div>
                 </div>
+              </div>
 
-                {/* Recipe Info */}
-                <h3 className="text-xl font-bold mb-2 line-clamp-2">{receta.nombre}</h3>
-                {receta.descripcion && (
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {receta.descripcion}
-                  </p>
-                )}
+              <h3 className="text-xl font-bold mb-2 line-clamp-2">{receta.nombre}</h3>
+              {receta.descripcion && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{receta.descripcion}</p>}
 
-                {/* Nutrients */}
-                <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-muted/50 rounded-lg">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Energía</p>
-                    <p className="font-semibold">
-                      {receta.nutrientes_totales?.energia_kcal?.toFixed(0) || 0} kcal
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Proteínas</p>
-                    <p className="font-semibold">
-                      {receta.nutrientes_totales?.proteina_g?.toFixed(1) || 0}g
-                    </p>
-                  </div>
-                </div>
+              <div className="mb-4"><SistemaCalificaciones recetaId={receta.id} tamaño="sm" mostrarEstadisticas={false} /></div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant={userLiked ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1 gap-2"
-                    onClick={() => handleLike(receta.id)}
-                    disabled={actionLoading === receta.id + '-like'}
-                  >
-                    {actionLoading === receta.id + '-like' ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Heart className={`h-4 w-4 ${userLiked ? 'fill-current' : ''}`} />
-                    )}
-                    {receta.likes_count || 0}
-                  </Button>
-                  
-                  <Button
-                    variant={userSaved ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleSave(receta.id)}
-                    disabled={actionLoading === receta.id + '-save'}
-                  >
-                    {actionLoading === receta.id + '-save' ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Bookmark className={`h-4 w-4 ${userSaved ? 'fill-current' : ''}`} />
-                    )}
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
+              <div className="flex gap-2 mt-auto">
+                <Button variant={userInteractions[receta.id]?.hasLiked ? 'default' : 'outline'} size="sm" className="flex-1 gap-2" onClick={() => handleLike(receta.id)} disabled={actionLoading[`like-${receta.id}`]}>
+                  {actionLoading[`like-${receta.id}`] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className={`h-4 w-4 ${userInteractions[receta.id]?.hasLiked ? 'fill-current' : ''}`} />}
+                  {receta.contador_likes || 0}
+                </Button>
+                <Button variant={userInteractions[receta.id]?.hasSaved ? 'default' : 'outline'} size="sm" className="flex-1 gap-2" onClick={() => handleSave(receta.id)} disabled={actionLoading[`save-${receta.id}`]}>
+                  {actionLoading[`save-${receta.id}`] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className={`h-4 w-4 ${userInteractions[receta.id]?.hasSaved ? 'fill-current' : ''}`} />}
+                  {receta.contador_guardados || 0}
+                </Button>
+              </div>
+            </Card>
+          ))}
         </div>
       )}
     </div>

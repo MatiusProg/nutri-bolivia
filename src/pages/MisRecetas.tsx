@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
+import { EditarRecetaModal } from '@/components/recetas/EditarRecetaModal';
+import { IReceta, LIMITE_RECETAS_PRIVADAS } from '@/types/receta.types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,31 +20,18 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-interface Receta {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  visibilidad: 'privada' | 'publica';
-  nutrientes_totales: {
-    energia_kcal: number;
-    proteina_g: number;
-    grasa_total_g: number;
-    carbohidratos_totales_g: number;
-  };
-  likes_count: number;
-  created_at: string;
-}
-
 export default function MisRecetas() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [recetas, setRecetas] = useState<Receta[]>([]);
+  const [recetas, setRecetas] = useState<IReceta[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [changingVisibility, setChangingVisibility] = useState<string | null>(null);
+  const [recetaEditando, setRecetaEditando] = useState<IReceta | null>(null);
+  const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
 
   const recetasPrivadas = recetas.filter(r => r.visibilidad === 'privada').length;
-  const limiteAlcanzado = recetasPrivadas >= 5;
+  const limiteAlcanzado = recetasPrivadas >= LIMITE_RECETAS_PRIVADAS;
 
   useEffect(() => {
     if (!user) {
@@ -102,14 +91,14 @@ export default function MisRecetas() {
     }
   };
 
-  const handleToggleVisibility = async (receta: Receta) => {
+  const handleToggleVisibility = async (receta: IReceta) => {
     const nuevaVisibilidad = receta.visibilidad === 'privada' ? 'publica' : 'privada';
     
     // Verificar límite antes de cambiar a privada
     if (nuevaVisibilidad === 'privada' && limiteAlcanzado) {
       toast({
         title: 'Límite alcanzado',
-        description: 'Ya tienes 5 recetas privadas. Haz pública alguna para liberar espacio.',
+        description: `Ya tienes ${LIMITE_RECETAS_PRIVADAS} recetas privadas. Haz pública alguna para liberar espacio.`,
         variant: 'destructive',
       });
       return;
@@ -181,7 +170,7 @@ export default function MisRecetas() {
             <AlertCircle className={`h-5 w-5 ${limiteAlcanzado ? 'text-destructive' : 'text-primary'}`} />
             <div className="flex-1">
               <p className="font-semibold">
-                Recetas Privadas: {recetasPrivadas}/5
+                Recetas Privadas: {recetasPrivadas}/{LIMITE_RECETAS_PRIVADAS}
               </p>
               {limiteAlcanzado && (
                 <p className="text-sm text-muted-foreground mt-1">
@@ -216,7 +205,7 @@ export default function MisRecetas() {
                 {receta.visibilidad === 'publica' && (
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <span>❤️</span>
-                    <span>{receta.likes_count || 0}</span>
+                    <span>{receta.contador_likes || 0}</span>
                   </div>
                 )}
               </div>
@@ -231,11 +220,11 @@ export default function MisRecetas() {
               <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-muted/50 rounded-lg">
                 <div>
                   <p className="text-xs text-muted-foreground">Energía</p>
-                  <p className="font-semibold">{receta.nutrientes_totales?.energia_kcal?.toFixed(0) || 0} kcal</p>
+                  <p className="font-semibold">{(receta.nutrientes_totales as any)?.energia_kcal?.toFixed(0) || 0} kcal</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Proteínas</p>
-                  <p className="font-semibold">{receta.nutrientes_totales?.proteina_g?.toFixed(1) || 0}g</p>
+                  <p className="font-semibold">{(receta.nutrientes_totales as any)?.proteinas_g?.toFixed(1) || 0}g</p>
                 </div>
               </div>
 
@@ -243,7 +232,19 @@ export default function MisRecetas() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 gap-2"
+                  className="gap-2"
+                  onClick={() => {
+                    setRecetaEditando(receta);
+                    setModalEdicionAbierto(true);
+                  }}
+                >
+                  <Edit className="h-4 w-4" />
+                  Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
                   onClick={() => handleToggleVisibility(receta)}
                   disabled={changingVisibility === receta.id}
                 >
@@ -254,7 +255,6 @@ export default function MisRecetas() {
                   ) : (
                     <EyeOff className="h-4 w-4" />
                   )}
-                  {receta.visibilidad === 'privada' ? 'Hacer Pública' : 'Hacer Privada'}
                 </Button>
                 <Button
                   variant="ghost"
@@ -286,6 +286,15 @@ export default function MisRecetas() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de Edición */}
+      <EditarRecetaModal
+        receta={recetaEditando}
+        open={modalEdicionAbierto}
+        onOpenChange={setModalEdicionAbierto}
+        onRecetaActualizada={loadRecetas}
+        recetasPrivadasCount={recetasPrivadas}
+      />
     </div>
   );
 }

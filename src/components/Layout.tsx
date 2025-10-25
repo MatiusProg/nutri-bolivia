@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
+import { CentroNotificaciones } from '@/components/notificaciones/CentroNotificaciones';
 
 export default function Layout() {
   const { user, signOut } = useAuth();
@@ -155,7 +156,9 @@ export default function Layout() {
               </Sheet>
 
               {/* Desktop User Menu */}
-              <div className="hidden md:flex items-center">
+              <div className="hidden md:flex items-center gap-2">
+                {user && <CentroNotificaciones />}
+                
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
