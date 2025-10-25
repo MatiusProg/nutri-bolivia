@@ -117,7 +117,7 @@ export function EditarRecetaModal({
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('recetas')
         .update({
           nombre: nombre.trim(),
@@ -155,7 +155,7 @@ export function EditarRecetaModal({
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('recetas')
         .delete()
         .eq('id', receta.id);

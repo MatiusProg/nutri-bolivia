@@ -62,7 +62,7 @@ export default function RecipeBuilder() {
 
     setSearchLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('alimentos')
         .select('*')
         .ilike('nombre_alimento', `%${query}%`)
@@ -140,12 +140,12 @@ export default function RecipeBuilder() {
     }
 
     // Check private recipe limit
-    const { data: existingRecipes } = await supabase
+    const { data: existingRecipes } = await (supabase as any)
       .from('recetas')
       .select('visibilidad')
       .eq('usuario_id', user.id);
 
-    const privateCount = existingRecipes?.filter(r => r.visibilidad === 'privada').length || 0;
+    const privateCount = existingRecipes?.filter((r: any) => r.visibilidad === 'privada').length || 0;
     
     if (privateCount >= 5) {
       toast({
@@ -165,7 +165,7 @@ export default function RecipeBuilder() {
         cantidad_g,
       }));
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('recetas')
         .insert([{
           usuario_id: user.id,

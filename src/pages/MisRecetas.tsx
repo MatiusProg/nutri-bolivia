@@ -43,7 +43,7 @@ export default function MisRecetas() {
 
   const loadRecetas = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('recetas')
         .select('*')
         .eq('usuario_id', user?.id)
@@ -67,10 +67,11 @@ export default function MisRecetas() {
     if (!deleteId) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('recetas')
         .delete()
-        .eq('id', deleteId);
+        .eq('id', deleteId)
+        .eq('usuario_id', user?.id);
 
       if (error) throw error;
 
@@ -106,7 +107,7 @@ export default function MisRecetas() {
 
     setChangingVisibility(receta.id);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('recetas')
         .update({ visibilidad: nuevaVisibilidad })
         .eq('id', receta.id);
@@ -197,7 +198,11 @@ export default function MisRecetas() {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recetas.map((receta) => (
-            <Card key={receta.id} className="p-6 hover:shadow-lg transition-all">
+            <Card 
+              key={receta.id} 
+              className="p-6 hover:shadow-lg transition-all cursor-pointer"
+              onClick={() => navigate(`/receta/${receta.id}`)}
+            >
               <div className="flex items-start justify-between mb-4">
                 <Badge variant={receta.visibilidad === 'publica' ? 'default' : 'secondary'}>
                   {receta.visibilidad === 'publica' ? '🌐 Pública' : '🔒 Privada'}
@@ -233,7 +238,8 @@ export default function MisRecetas() {
                   variant="outline"
                   size="sm"
                   className="gap-2"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setRecetaEditando(receta);
                     setModalEdicionAbierto(true);
                   }}
@@ -245,7 +251,10 @@ export default function MisRecetas() {
                   variant="outline"
                   size="sm"
                   className="gap-2"
-                  onClick={() => handleToggleVisibility(receta)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleVisibility(receta);
+                  }}
                   disabled={changingVisibility === receta.id}
                 >
                   {changingVisibility === receta.id ? (
@@ -259,7 +268,10 @@ export default function MisRecetas() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setDeleteId(receta.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteId(receta.id);
+                  }}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>

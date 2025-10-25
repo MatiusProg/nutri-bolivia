@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, Heart, Bookmark, Loader2, Search, SlidersHorizontal, Clock, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import { IRecetaConPerfil, IInteraccionUsuario, TDificultad, DIFICULTADES } from
 
 export default function Comunidad() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [recetas, setRecetas] = useState<IRecetaConPerfil[]>([]);
   const [loading, setLoading] = useState(true);
   const [userInteractions, setUserInteractions] = useState<Record<string, IInteraccionUsuario>>({});
@@ -38,7 +40,7 @@ export default function Comunidad() {
 
   const loadRecetas = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('recetas')
         .select(`*, perfil:usuario_id (nombre_completo, avatar_url, email)`)
         .eq('visibilidad', 'publica')
@@ -57,13 +59,13 @@ export default function Comunidad() {
   const loadUserInteractions = async () => {
     if (!user) return;
     try {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('recetas_interacciones')
         .select('receta_id, tipo')
         .eq('usuario_id', user.id);
 
       const interactions: Record<string, IInteraccionUsuario> = {};
-      data?.forEach((i) => {
+      data?.forEach((i: any) => {
         if (!interactions[i.receta_id]) interactions[i.receta_id] = { hasLiked: false, hasSaved: false };
         if (i.tipo === 'like') interactions[i.receta_id].hasLiked = true;
         if (i.tipo === 'guardar') interactions[i.receta_id].hasSaved = true;
@@ -85,11 +87,11 @@ export default function Comunidad() {
 
     try {
       if (hasLiked) {
-        await supabase.from('recetas_interacciones').delete().eq('receta_id', recetaId).eq('usuario_id', user.id).eq('tipo', 'like');
+        await (supabase as any).from('recetas_interacciones').delete().eq('receta_id', recetaId).eq('usuario_id', user.id).eq('tipo', 'like');
         setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasLiked: false } });
         setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_likes: Math.max(0, r.contador_likes - 1) } : r));
       } else {
-        await supabase.from('recetas_interacciones').insert({ receta_id: recetaId, usuario_id: user.id, tipo: 'like' });
+        await (supabase as any).from('recetas_interacciones').insert({ receta_id: recetaId, usuario_id: user.id, tipo: 'like' });
         setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasLiked: true } });
         setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_likes: r.contador_likes + 1 } : r));
       }
@@ -111,11 +113,11 @@ export default function Comunidad() {
 
     try {
       if (hasSaved) {
-        await supabase.from('recetas_interacciones').delete().eq('receta_id', recetaId).eq('usuario_id', user.id).eq('tipo', 'guardar');
+        await (supabase as any).from('recetas_interacciones').delete().eq('receta_id', recetaId).eq('usuario_id', user.id).eq('tipo', 'guardar');
         setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasSaved: false } });
         setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_guardados: Math.max(0, r.contador_guardados - 1) } : r));
       } else {
-        await supabase.from('recetas_interacciones').insert({ receta_id: recetaId, usuario_id: user.id, tipo: 'guardar' });
+        await (supabase as any).from('recetas_interacciones').insert({ receta_id: recetaId, usuario_id: user.id, tipo: 'guardar' });
         setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasSaved: true } });
         setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_guardados: r.contador_guardados + 1 } : r));
       }
@@ -185,7 +187,11 @@ export default function Comunidad() {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recetasFiltradas.map((receta) => (
-            <Card key={receta.id} className="p-6 hover:shadow-lg transition-all flex flex-col">
+            <Card 
+              key={receta.id} 
+              className="p-6 hover:shadow-lg transition-all flex flex-col cursor-pointer"
+              onClick={() => navigate(`/receta/${receta.id}`)}
+            >
               <div className="flex items-center gap-3 mb-4">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={receta.perfil?.avatar_url || undefined} />
@@ -206,11 +212,23 @@ export default function Comunidad() {
               <div className="mb-4"><SistemaCalificaciones recetaId={receta.id} tamaño="sm" mostrarEstadisticas={false} /></div>
 
               <div className="flex gap-2 mt-auto">
-                <Button variant={userInteractions[receta.id]?.hasLiked ? 'default' : 'outline'} size="sm" className="flex-1 gap-2" onClick={() => handleLike(receta.id)} disabled={actionLoading[`like-${receta.id}`]}>
+                <Button 
+                  variant={userInteractions[receta.id]?.hasLiked ? 'default' : 'outline'} 
+                  size="sm" 
+                  className="flex-1 gap-2" 
+                  onClick={(e) => { e.stopPropagation(); handleLike(receta.id); }} 
+                  disabled={actionLoading[`like-${receta.id}`]}
+                >
                   {actionLoading[`like-${receta.id}`] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className={`h-4 w-4 ${userInteractions[receta.id]?.hasLiked ? 'fill-current' : ''}`} />}
                   {receta.contador_likes || 0}
                 </Button>
-                <Button variant={userInteractions[receta.id]?.hasSaved ? 'default' : 'outline'} size="sm" className="flex-1 gap-2" onClick={() => handleSave(receta.id)} disabled={actionLoading[`save-${receta.id}`]}>
+                <Button 
+                  variant={userInteractions[receta.id]?.hasSaved ? 'default' : 'outline'} 
+                  size="sm" 
+                  className="flex-1 gap-2" 
+                  onClick={(e) => { e.stopPropagation(); handleSave(receta.id); }} 
+                  disabled={actionLoading[`save-${receta.id}`]}
+                >
                   {actionLoading[`save-${receta.id}`] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className={`h-4 w-4 ${userInteractions[receta.id]?.hasSaved ? 'fill-current' : ''}`} />}
                   {receta.contador_guardados || 0}
                 </Button>
