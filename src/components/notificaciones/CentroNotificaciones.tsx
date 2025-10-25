@@ -82,7 +82,7 @@ export function CentroNotificaciones() {
 
     setLoading(true);
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from('notificaciones')
         .select('*')
         .eq('usuario_id', user.id)
@@ -106,7 +106,7 @@ export function CentroNotificaciones() {
 
   const marcarComoLeida = async (notificacionId: string) => {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('notificaciones')
         .update({ leida: true })
         .eq('id', notificacionId);
@@ -129,7 +129,7 @@ export function CentroNotificaciones() {
     if (!user) return;
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('notificaciones')
         .update({ leida: true })
         .eq('usuario_id', user.id)
