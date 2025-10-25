@@ -19,7 +19,7 @@ interface ICalificacion {
   id: string;
   receta_id: string;
   usuario_id: string;
-  calificacion: number;
+  puntuacion: number; // ← CAMBIADO: calificacion → puntuacion
   created_at: string;
 }
 
@@ -58,10 +58,10 @@ export function SistemaCalificaciones({
 
   const cargarCalificaciones = async () => {
     try {
-      // Cargar todas las calificaciones
-      const { data: todasCalificaciones, error: errorTodas } = await (supabase as any)
+      // Cargar todas las calificaciones - CORREGIDO: calificacion → puntuacion
+      const { data: todasCalificaciones, error: errorTodas } = await supabase
         .from('recetas_calificaciones')
-        .select('calificacion')
+        .select('puntuacion') // ← CAMBIADO
         .eq('receta_id', recetaId);
 
       if (errorTodas) throw errorTodas;
@@ -72,8 +72,8 @@ export function SistemaCalificaciones({
         let suma = 0;
 
         todasCalificaciones.forEach((cal: any) => {
-          suma += cal.calificacion;
-          distribucion[cal.calificacion]++;
+          suma += cal.puntuacion; // ← CAMBIADO
+          distribucion[cal.puntuacion]++; // ← CAMBIADO
         });
 
         setEstadisticas({
@@ -83,24 +83,24 @@ export function SistemaCalificaciones({
         });
       }
 
-      // Cargar calificación del usuario actual
+      // Cargar calificación del usuario actual - CORREGIDO
       if (user) {
-        const { data: calUsuario, error: errorUsuario } = await (supabase as any)
+        const { data: calUsuario, error: errorUsuario } = await supabase
           .from('recetas_calificaciones')
-          .select('id, calificacion')
+          .select('id, puntuacion') // ← CAMBIADO
           .eq('receta_id', recetaId)
           .eq('usuario_id', user.id)
           .maybeSingle();
 
         if (errorUsuario) throw errorUsuario;
-        setCalificacionUsuario(calUsuario?.calificacion || 0);
+        setCalificacionUsuario(calUsuario?.puntuacion || 0); // ← CAMBIADO
       }
     } catch (error) {
       console.error('Error cargando calificaciones:', error);
     }
   };
 
-  const handleCalificar = async (calificacion: number) => {
+  const handleCalificar = async (puntuacion: number) => {
     if (readonly || !user) {
       if (!user) {
         toast({
@@ -115,7 +115,7 @@ export function SistemaCalificaciones({
     setLoading(true);
     try {
       // Verificar si ya existe una calificación
-      const { data: existente } = await (supabase as any)
+      const { data: existente } = await supabase
         .from('recetas_calificaciones')
         .select('id')
         .eq('receta_id', recetaId)
@@ -123,32 +123,32 @@ export function SistemaCalificaciones({
         .maybeSingle();
 
       if (existente) {
-        // Actualizar calificación existente
-        const { error } = await (supabase as any)
+        // Actualizar calificación existente - CORREGIDO
+        const { error } = await supabase
           .from('recetas_calificaciones')
-          .update({ calificacion })
+          .update({ puntuacion }) // ← CAMBIADO
           .eq('id', existente.id);
 
         if (error) throw error;
       } else {
-        // Crear nueva calificación
-        const { error } = await (supabase as any)
+        // Crear nueva calificación - CORREGIDO
+        const { error } = await supabase
           .from('recetas_calificaciones')
           .insert({
             receta_id: recetaId,
             usuario_id: user.id,
-            calificacion,
+            puntuacion, // ← CAMBIADO
           });
 
         if (error) throw error;
       }
 
-      setCalificacionUsuario(calificacion);
+      setCalificacionUsuario(puntuacion);
       await cargarCalificaciones();
 
       toast({
         title: 'Calificación guardada',
-        description: `Has calificado esta receta con ${calificacion} estrella${calificacion > 1 ? 's' : ''}`,
+        description: `Has calificado esta receta con ${puntuacion} estrella${puntuacion > 1 ? 's' : ''}`,
       });
     } catch (error: any) {
       toast({
