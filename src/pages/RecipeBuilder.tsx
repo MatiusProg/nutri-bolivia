@@ -7,9 +7,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabaseClient';
-import { Alimento, Database } from '@/types/database';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+
+type Alimento = any; // Will be updated when Supabase types regenerate
 import {
   Dialog,
   DialogContent,

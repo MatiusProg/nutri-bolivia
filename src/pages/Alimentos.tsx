@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { Alimento } from '@/types/database';
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+
+type Alimento = any; // Will be updated when Supabase types regenerate
 import { Search, Loader2, Apple } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -27,7 +29,7 @@ export default function Alimentos() {
   const fetchAlimentos = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from('alimentos')
         .select('*', { count: 'exact' })
         .range((page - 1) * itemsPerPage, page * itemsPerPage - 1)

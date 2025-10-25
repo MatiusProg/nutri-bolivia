@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alimento } from '@/types/database';
+
+type Alimento = any; // Will be updated when Supabase types regenerate
 import {
   Dialog,
   DialogContent,
