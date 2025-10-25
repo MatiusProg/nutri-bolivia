@@ -43,7 +43,7 @@ export default function MisRecetas() {
 
   const loadRecetas = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('recetas')
         .select('*')
         .eq('usuario_id', user?.id)
@@ -67,7 +67,7 @@ export default function MisRecetas() {
     if (!deleteId) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('recetas')
         .delete()
         .eq('id', deleteId);
@@ -106,7 +106,7 @@ export default function MisRecetas() {
 
     setChangingVisibility(receta.id);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('recetas')
         .update({ visibilidad: nuevaVisibilidad })
         .eq('id', receta.id);

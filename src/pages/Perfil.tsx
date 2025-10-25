@@ -50,7 +50,7 @@ export default function Perfil() {
 
   const loadProfile = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('perfiles')
         .select('*')
         .eq('id', user?.id)
@@ -76,15 +76,15 @@ export default function Perfil() {
 
   const loadStats = async () => {
     try {
-      const { data: recetas } = await supabase
+      const { data: recetas } = await (supabase as any)
         .from('recetas')
         .select('visibilidad, contador_likes')
         .eq('usuario_id', user?.id);
 
       if (recetas) {
-        const privadas = recetas.filter(r => r.visibilidad === 'privada').length;
-        const publicas = recetas.filter(r => r.visibilidad === 'publica').length;
-        const likes = recetas.reduce((sum, r) => sum + (r.contador_likes || 0), 0);
+        const privadas = recetas.filter((r: any) => r.visibilidad === 'privada').length;
+        const publicas = recetas.filter((r: any) => r.visibilidad === 'publica').length;
+        const likes = recetas.reduce((sum: number, r: any) => sum + (r.contador_likes || 0), 0);
 
         setStats({
           total_recetas: recetas.length,
@@ -101,7 +101,7 @@ export default function Perfil() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('perfiles')
         .update({
           nombre_completo: perfil.nombre_completo,
