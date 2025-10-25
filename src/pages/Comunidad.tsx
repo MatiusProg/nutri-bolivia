@@ -47,9 +47,15 @@ export default function Comunidad() {
         .order('created_at', { ascending: false });
   
       if (error) throw error;
+       // DEBUG TEMPORAL
+      console.log('✅ Datos recibidos de recetas_comunidad:', data);
+      console.log('🔍 Estructura primera receta:', data?.[0]);
+      console.log('📊 Total de recetas:', data?.length);
+      
       setRecetas(data || []);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ Error:', error);
+      setRecetas(data || []);
       toast({ 
         title: 'Error', 
         description: 'No se pudieron cargar las recetas', 
