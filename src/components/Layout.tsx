@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { Leaf, User, LogOut, Search, ChefHat, Users } from 'lucide-react';
+import { Leaf, User, LogOut, Search, ChefHat, Users, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,12 +8,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/AuthModal';
 
 export default function Layout() {
   const { user, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -59,50 +67,138 @@ export default function Layout() {
               </Link>
             </div>
 
-            {/* User Menu */}
+            {/* Mobile Menu */}
             <div className="flex items-center gap-3">
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      {user.user_metadata?.avatar_url ? (
-                        <img
-                          src={user.user_metadata.avatar_url}
-                          alt="Avatar"
-                          className="h-8 w-8 rounded-full"
-                        />
-                      ) : (
-                        <User className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <div className="px-2 py-1.5 text-sm font-medium">
-                      {user.email}
-                    </div>
-                    <DropdownMenuItem asChild>
-                      <Link to="/mis-recetas" className="cursor-pointer">
-                        <ChefHat className="mr-2 h-4 w-4" />
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild className="md:hidden">
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-64">
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                      <Leaf className="h-5 w-5 text-primary" />
+                      NutriBolivia
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-4 mt-8">
+                    <Link
+                      to="/alimentos"
+                      className="flex items-center gap-3 text-base hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Search className="h-5 w-5" />
+                      Alimentos
+                    </Link>
+                    
+                    {user && (
+                      <Link
+                        to="/mis-recetas"
+                        className="flex items-center gap-3 text-base hover:text-primary transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <ChefHat className="h-5 w-5" />
                         Mis Recetas
                       </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/perfil" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        Mi Perfil
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={signOut} className="cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Cerrar Sesión
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button onClick={() => setShowAuthModal(true)} variant="default">
-                  Iniciar Sesión
-                </Button>
-              )}
+                    )}
+                    
+                    <Link
+                      to="/comunidad"
+                      className="flex items-center gap-3 text-base hover:text-primary transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Users className="h-5 w-5" />
+                      Comunidad
+                    </Link>
+
+                    {user && (
+                      <>
+                        <div className="border-t border-border my-2" />
+                        <Link
+                          to="/perfil"
+                          className="flex items-center gap-3 text-base hover:text-primary transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <User className="h-5 w-5" />
+                          Mi Perfil
+                        </Link>
+                        <button
+                          onClick={() => {
+                            signOut();
+                            setMobileMenuOpen(false);
+                          }}
+                          className="flex items-center gap-3 text-base hover:text-primary transition-colors text-left"
+                        >
+                          <LogOut className="h-5 w-5" />
+                          Cerrar Sesión
+                        </button>
+                      </>
+                    )}
+
+                    {!user && (
+                      <>
+                        <div className="border-t border-border my-2" />
+                        <Button 
+                          onClick={() => {
+                            setShowAuthModal(true);
+                            setMobileMenuOpen(false);
+                          }} 
+                          className="w-full"
+                        >
+                          Iniciar Sesión
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Desktop User Menu */}
+              <div className="hidden md:flex items-center">
+                {user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full">
+                        {user.user_metadata?.avatar_url ? (
+                          <img
+                            src={user.user_metadata.avatar_url}
+                            alt="Avatar"
+                            className="h-8 w-8 rounded-full"
+                          />
+                        ) : (
+                          <User className="h-5 w-5" />
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <div className="px-2 py-1.5 text-sm font-medium">
+                        {user.email}
+                      </div>
+                      <DropdownMenuItem asChild>
+                        <Link to="/mis-recetas" className="cursor-pointer">
+                          <ChefHat className="mr-2 h-4 w-4" />
+                          Mis Recetas
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/perfil" className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          Mi Perfil
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Cerrar Sesión
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button onClick={() => setShowAuthModal(true)} variant="default">
+                    Iniciar Sesión
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
