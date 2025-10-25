@@ -5,14 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
 interface Perfil {
   nombre_completo: string;
   avatar_url: string;
-  preferencias_dieteticas: string;
+  preferencias_dieteticas: any; // Json type from database
 }
 
 interface Stats {
@@ -53,8 +53,8 @@ export default function Perfil() {
       const { data, error } = await supabase
         .from('perfiles')
         .select('*')
-        .eq('usuario_id', user?.id)
-        .single();
+        .eq('id', user?.id)
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -62,7 +62,9 @@ export default function Perfil() {
         setPerfil({
           nombre_completo: data.nombre_completo || '',
           avatar_url: data.avatar_url || '',
-          preferencias_dieteticas: data.preferencias_dieteticas || '',
+          preferencias_dieteticas: typeof data.preferencias_dieteticas === 'string' 
+            ? data.preferencias_dieteticas 
+            : JSON.stringify(data.preferencias_dieteticas || ''),
         });
       }
     } catch (error) {
@@ -76,13 +78,13 @@ export default function Perfil() {
     try {
       const { data: recetas } = await supabase
         .from('recetas')
-        .select('visibilidad, likes_count')
+        .select('visibilidad, contador_likes')
         .eq('usuario_id', user?.id);
 
       if (recetas) {
         const privadas = recetas.filter(r => r.visibilidad === 'privada').length;
         const publicas = recetas.filter(r => r.visibilidad === 'publica').length;
-        const likes = recetas.reduce((sum, r) => sum + (r.likes_count || 0), 0);
+        const likes = recetas.reduce((sum, r) => sum + (r.contador_likes || 0), 0);
 
         setStats({
           total_recetas: recetas.length,
@@ -106,7 +108,7 @@ export default function Perfil() {
           avatar_url: perfil.avatar_url,
           preferencias_dieteticas: perfil.preferencias_dieteticas,
         })
-        .eq('usuario_id', user?.id);
+        .eq('id', user?.id);
 
       if (error) throw error;
 

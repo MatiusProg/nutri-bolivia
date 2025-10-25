@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 import { Alimento } from '@/types/database';
 import { Search, Loader2, Apple } from 'lucide-react';
 import { Input } from '@/components/ui/input';
