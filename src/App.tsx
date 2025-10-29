@@ -13,6 +13,7 @@ import MisRecetas from "./pages/MisRecetas";
 import Perfil from "./pages/Perfil";
 import Comunidad from "./pages/Comunidad";
 import RecetaDetalle from "./pages/RecetaDetalle";
+import RecetasGuardadas from "./pages/RecetasGuardadas";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/recetas/nueva" element={<RecipeBuilder />} />
               <Route path="/receta/:id" element={<RecetaDetalle />} />
               <Route path="/mis-recetas" element={<MisRecetas />} />
+              <Route path="/recetas-guardadas" element={<RecetasGuardadas />} />
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/comunidad" element={<Comunidad />} />
               <Route path="*" element={<NotFound />} />
