@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
-import { IRecetaConPerfil, IInteraccionUsuario, TDificultad, DIFICULTADES } from '@/types/receta.types';
+import { IRecetaConPerfil, IInteraccionUsuario, TDificultad, TVisibilidad, IIngrediente, INutrientesTotales, DIFICULTADES } from '@/types/receta.types';
 
 export default function Comunidad() {
   const { user } = useAuth();
@@ -47,18 +47,24 @@ export default function Comunidad() {
   
       if (error) throw error;
   
-      // ADAPTAR datos de la vista al tipo esperado
-      const recetasAdaptadas = data?.map(receta => ({
-        ...receta,
-        perfil: {
-          nombre_completo: receta.autor_nombre,
-          avatar_url: receta.autor_avatar,
-          email: '' // o obtener de otra fuente si está disponible
-        }
-      })) || [];
-  
-      console.log('✅ Recetas adaptadas:', recetasAdaptadas);
-      setRecetas(recetasAdaptadas);
+    // ADAPTAR datos de la vista al tipo esperado
+    const recetasAdaptadas = data?.map(receta => ({
+      ...receta,
+      ingredientes: receta.ingredientes as unknown as IIngrediente[],
+      nutrientes_totales: receta.nutrientes_totales as unknown as INutrientesTotales,
+      visibilidad: receta.visibilidad as TVisibilidad,
+      dificultad: receta.dificultad as TDificultad | null,
+      etiquetas: receta.etiquetas as string[] | null,
+      es_duplicada: receta.es_duplicada ?? false,
+      perfil: {
+        nombre_completo: receta.autor_nombre,
+        avatar_url: receta.autor_avatar,
+        email: '' // o obtener de otra fuente si está disponible
+      }
+    })) || [];
+
+    console.log('✅ Recetas adaptadas:', recetasAdaptadas);
+    setRecetas(recetasAdaptadas);
     } catch (error) {
       console.error('❌ Error:', error);
       toast({ 
@@ -74,7 +80,7 @@ export default function Comunidad() {
   const loadUserInteractions = async () => {
     if (!user) return;
     try {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from('recetas_interacciones')
         .select('receta_id, tipo')
         .eq('usuario_id', user.id);
@@ -102,11 +108,11 @@ export default function Comunidad() {
 
     try {
       if (hasLiked) {
-        await (supabase as any).from('recetas_interacciones').delete().eq('receta_id', recetaId).eq('usuario_id', user.id).eq('tipo', 'like');
+        await supabase.from('recetas_interacciones').delete().eq('receta_id', recetaId).eq('usuario_id', user.id).eq('tipo', 'like');
         setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasLiked: false } });
         setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_likes: Math.max(0, r.contador_likes - 1) } : r));
       } else {
-        await (supabase as any).from('recetas_interacciones').insert({ receta_id: recetaId, usuario_id: user.id, tipo: 'like' });
+        await supabase.from('recetas_interacciones').insert({ receta_id: recetaId, usuario_id: user.id, tipo: 'like' });
         setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasLiked: true } });
         setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_likes: r.contador_likes + 1 } : r));
       }
@@ -128,11 +134,11 @@ export default function Comunidad() {
 
     try {
       if (hasSaved) {
-        await (supabase as any).from('recetas_interacciones').delete().eq('receta_id', recetaId).eq('usuario_id', user.id).eq('tipo', 'guardar');
+        await supabase.from('recetas_interacciones').delete().eq('receta_id', recetaId).eq('usuario_id', user.id).eq('tipo', 'guardar');
         setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasSaved: false } });
         setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_guardados: Math.max(0, r.contador_guardados - 1) } : r));
       } else {
-        await (supabase as any).from('recetas_interacciones').insert({ receta_id: recetaId, usuario_id: user.id, tipo: 'guardar' });
+        await supabase.from('recetas_interacciones').insert({ receta_id: recetaId, usuario_id: user.id, tipo: 'guardar' });
         setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasSaved: true } });
         setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_guardados: r.contador_guardados + 1 } : r));
       }

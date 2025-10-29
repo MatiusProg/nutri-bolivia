@@ -110,18 +110,20 @@ export default function RecetaDetalle() {
         .eq('id', recetaData.usuario_id)
         .single();
   
-      // 3. Combinar datos manualmente
-      const recetaCompleta = {
-        ...recetaData,
-        perfil: perfilData || { 
-          nombre_completo: 'Usuario', 
-          avatar_url: null, 
-          email: null 
-        }
-      };
-  
-      setReceta(recetaCompleta);
-      await cargarDetalleIngredientes(recetaData.ingredientes);
+    // 3. Combinar datos manualmente
+    const recetaCompleta = {
+      ...recetaData,
+      ingredientes: recetaData.ingredientes as unknown as any[],
+      nutrientes_totales: recetaData.nutrientes_totales as unknown as any,
+      perfil: perfilData || { 
+        nombre_completo: 'Usuario', 
+        avatar_url: null, 
+        email: null 
+      }
+    };
+
+    setReceta(recetaCompleta);
+    await cargarDetalleIngredientes(recetaData.ingredientes as unknown as any[]);
     } catch (error: any) {
       console.error('Error:', error);
       toast({ 
@@ -139,7 +141,7 @@ export default function RecetaDetalle() {
 
     try {
       const ids = ingredientes.map((ing: any) => ing.alimento_id);
-      const { data: alimentos } = await (supabase as any)
+      const { data: alimentos } = await supabase
         .from('alimentos')
         .select('*')
         .in('id_alimento', ids);
@@ -172,7 +174,7 @@ export default function RecetaDetalle() {
     if (!user || !id) return;
 
     try {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from('recetas_interacciones')
         .select('tipo')
         .eq('receta_id', id)
@@ -195,11 +197,11 @@ export default function RecetaDetalle() {
     setActionLoading('like');
     try {
       if (hasLiked) {
-        await (supabase as any).from('recetas_interacciones').delete().eq('receta_id', receta.id).eq('usuario_id', user.id).eq('tipo', 'like');
+        await supabase.from('recetas_interacciones').delete().eq('receta_id', receta.id).eq('usuario_id', user.id).eq('tipo', 'like');
         setHasLiked(false);
         setReceta({ ...receta, contador_likes: Math.max(0, receta.contador_likes - 1) });
       } else {
-        await (supabase as any).from('recetas_interacciones').insert({ receta_id: receta.id, usuario_id: user.id, tipo: 'like' });
+        await supabase.from('recetas_interacciones').insert({ receta_id: receta.id, usuario_id: user.id, tipo: 'like' });
         setHasLiked(true);
         setReceta({ ...receta, contador_likes: receta.contador_likes + 1 });
       }
@@ -220,11 +222,11 @@ export default function RecetaDetalle() {
     setActionLoading('save');
     try {
       if (hasSaved) {
-        await (supabase as any).from('recetas_interacciones').delete().eq('receta_id', receta.id).eq('usuario_id', user.id).eq('tipo', 'guardar');
+        await supabase.from('recetas_interacciones').delete().eq('receta_id', receta.id).eq('usuario_id', user.id).eq('tipo', 'guardar');
         setHasSaved(false);
         setReceta({ ...receta, contador_guardados: Math.max(0, receta.contador_guardados - 1) });
       } else {
-        await (supabase as any).from('recetas_interacciones').insert({ receta_id: receta.id, usuario_id: user.id, tipo: 'guardar' });
+        await supabase.from('recetas_interacciones').insert({ receta_id: receta.id, usuario_id: user.id, tipo: 'guardar' });
         setHasSaved(true);
         setReceta({ ...receta, contador_guardados: receta.contador_guardados + 1 });
       }
@@ -240,7 +242,7 @@ export default function RecetaDetalle() {
 
     setDeleting(true);
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('recetas')
         .delete()
         .eq('id', receta.id)

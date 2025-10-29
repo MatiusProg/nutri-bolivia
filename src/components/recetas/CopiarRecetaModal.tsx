@@ -67,7 +67,7 @@ export function CopiarRecetaModal({ open, onOpenChange, recetaOriginal }: Copiar
     setLoading(true);
     try {
       // Verificar límite de recetas privadas
-      const { data: recetasUsuario, error: countError } = await (supabase as any)
+      const { data: recetasUsuario, error: countError } = await supabase
         .from('recetas')
         .select('id')
         .eq('usuario_id', user.id)
@@ -99,7 +99,7 @@ export function CopiarRecetaModal({ open, onOpenChange, recetaOriginal }: Copiar
         receta_original_id: recetaOriginal.id,
       };
 
-      const { data: recetaCreada, error: insertError } = await (supabase as any)
+      const { data: recetaCreada, error: insertError } = await supabase
         .from('recetas')
         .insert(nuevaReceta)
         .select()

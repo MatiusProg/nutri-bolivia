@@ -29,7 +29,7 @@ export default function RecetasGuardadas() {
   const loadRecetasGuardadas = async () => {
     try {
       // Obtener IDs de recetas guardadas
-      const { data: interacciones, error: interError } = await (supabase as any)
+      const { data: interacciones, error: interError } = await supabase
         .from('recetas_interacciones')
         .select('receta_id')
         .eq('usuario_id', user?.id)
@@ -46,7 +46,7 @@ export default function RecetasGuardadas() {
       const recetaIds = interacciones.map((i: any) => i.receta_id);
 
       // Obtener recetas desde la vista comunidad
-      const { data: recetasData, error: recetasError } = await (supabase as any)
+      const { data: recetasData, error: recetasError } = await supabase
         .from('recetas_comunidad')
         .select('*')
         .in('id', recetaIds)
@@ -83,7 +83,7 @@ export default function RecetasGuardadas() {
 
     setRemovingId(recetaId);
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('recetas_interacciones')
         .delete()
         .eq('receta_id', recetaId)
