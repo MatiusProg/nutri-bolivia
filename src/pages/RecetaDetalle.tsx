@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, ChefHat, User, Heart, Bookmark, Loader2, Edit, Trash2, Copy } from 'lucide-react';
+import { ArrowLeft, Clock, ChefHat, User, Heart, Bookmark, Loader2, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,8 +27,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
-import DuplicarRecetaModal from '@/components/recetas/DuplicarRecetaModal';
-import { DIFICULTADES, IRecetaConPerfil } from '@/types/receta.types';
+import { DIFICULTADES } from '@/types/receta.types';
 
 interface Receta {
   id: string;
@@ -76,7 +75,6 @@ export default function RecetaDetalle() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [modalDuplicarAbierto, setModalDuplicarAbierto] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -88,7 +86,7 @@ export default function RecetaDetalle() {
   const cargarReceta = async () => {
     try {
       // 1. Obtener receta sin join
-      const { data: recetaData, error: recetaError } = await (supabase as any)
+      const { data: recetaData, error: recetaError } = await supabase
         .from('recetas')
         .select('*')
         .eq('id', id)
@@ -106,7 +104,7 @@ export default function RecetaDetalle() {
       }
   
       // 2. Obtener perfil por separado
-      const { data: perfilData, error: perfilError } = await (supabase as any)
+      const { data: perfilData, error: perfilError } = await supabase
         .from('perfiles')
         .select('nombre_completo, avatar_url, email')
         .eq('id', recetaData.usuario_id)
@@ -367,14 +365,6 @@ export default function RecetaDetalle() {
                   {actionLoading === 'save' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className={`h-4 w-4 ${hasSaved ? 'fill-current' : ''}`} />}
                   Guardar
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setModalDuplicarAbierto(true)}
-                  className="gap-2"
-                >
-                  <Copy className="h-4 w-4" />
-                  Copiar Receta
-                </Button>
               </>
             )}
           </div>
@@ -486,21 +476,13 @@ export default function RecetaDetalle() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEliminar} disabled={deleting}>
-              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar'}
+            <AlertDialogAction onClick={handleEliminar} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
+              {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Modal Duplicar */}
-      {modalDuplicarAbierto && receta && (
-        <DuplicarRecetaModal
-          receta={receta as any}
-          open={modalDuplicarAbierto}
-          onOpenChange={setModalDuplicarAbierto}
-        />
-      )}
     </div>
   );
 }

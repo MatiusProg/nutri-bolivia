@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Heart, Bookmark, Loader2, Search, SlidersHorizontal, Clock, ChefHat, Copy } from 'lucide-react';
+import { Users, Heart, Bookmark, Loader2, Search, SlidersHorizontal, Clock, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
-import DuplicarRecetaModal from '@/components/recetas/DuplicarRecetaModal';
 import { IRecetaConPerfil, IInteraccionUsuario, TDificultad, DIFICULTADES } from '@/types/receta.types';
 
 export default function Comunidad() {
@@ -23,7 +22,6 @@ export default function Comunidad() {
   const [loading, setLoading] = useState(true);
   const [userInteractions, setUserInteractions] = useState<Record<string, IInteraccionUsuario>>({});
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
-  const [recetaDuplicar, setRecetaDuplicar] = useState<IRecetaConPerfil | null>(null);
   
   // Estados de filtros
   const [busqueda, setBusqueda] = useState('');
@@ -42,10 +40,10 @@ export default function Comunidad() {
 
     const loadRecetas = async () => {
     try {
-    const { data, error } = await (supabase as any)
-      .from('recetas_comunidad')
-      .select('*')
-      .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('recetas_comunidad')
+        .select('*')
+        .order('created_at', { ascending: false });
   
       if (error) throw error;
   
@@ -249,27 +247,10 @@ export default function Comunidad() {
                   {actionLoading[`save-${receta.id}`] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className={`h-4 w-4 ${userInteractions[receta.id]?.hasSaved ? 'fill-current' : ''}`} />}
                   {receta.contador_guardados || 0}
                 </Button>
-                {user && receta.usuario_id !== user.id && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={(e) => { e.stopPropagation(); setRecetaDuplicar(receta); }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                )}
               </div>
             </Card>
           ))}
         </div>
-      )}
-
-      {recetaDuplicar && (
-        <DuplicarRecetaModal
-          receta={recetaDuplicar}
-          open={!!recetaDuplicar}
-          onOpenChange={(open) => !open && setRecetaDuplicar(null)}
-        />
       )}
     </div>
   );
