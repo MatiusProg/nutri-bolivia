@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, ChefHat, User, Heart, Bookmark, Loader2, Edit, Trash2, Copy } from 'lucide-react';
+import { ArrowLeft, Clock, ChefHat, User, Heart, Bookmark, Loader2, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
-import { CopiarRecetaModal } from '@/components/recetas/CopiarRecetaModal';
 import { DIFICULTADES } from '@/types/receta.types';
 
 interface Receta {
@@ -76,7 +75,6 @@ export default function RecetaDetalle() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [copiarModalOpen, setCopiarModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -88,7 +86,7 @@ export default function RecetaDetalle() {
   const cargarReceta = async () => {
     try {
       // 1. Obtener receta sin join
-      const { data: recetaData, error: recetaError } = await (supabase as any)
+      const { data: recetaData, error: recetaError } = await supabase
         .from('recetas')
         .select('*')
         .eq('id', id)
@@ -106,15 +104,15 @@ export default function RecetaDetalle() {
       }
   
       // 2. Obtener perfil por separado
-      const { data: perfilData, error: perfilError } = await (supabase as any)
+      const { data: perfilData, error: perfilError } = await supabase
         .from('perfiles')
         .select('nombre_completo, avatar_url, email')
-        .eq('id', (recetaData as any).usuario_id)
+        .eq('id', recetaData.usuario_id)
         .single();
   
       // 3. Combinar datos manualmente
       const recetaCompleta = {
-        ...(recetaData as any),
+        ...recetaData,
         perfil: perfilData || { 
           nombre_completo: 'Usuario', 
           avatar_url: null, 
@@ -123,7 +121,7 @@ export default function RecetaDetalle() {
       };
   
       setReceta(recetaCompleta);
-      await cargarDetalleIngredientes((recetaData as any).ingredientes);
+      await cargarDetalleIngredientes(recetaData.ingredientes);
     } catch (error: any) {
       console.error('Error:', error);
       toast({ 
@@ -350,14 +348,6 @@ export default function RecetaDetalle() {
             ) : (
               <>
                 <Button
-                  variant="outline"
-                  onClick={() => setCopiarModalOpen(true)}
-                  className="gap-2"
-                >
-                  <Copy className="h-4 w-4" />
-                  Copiar Receta
-                </Button>
-                <Button
                   variant={hasLiked ? 'default' : 'outline'}
                   onClick={handleLike}
                   disabled={actionLoading === 'like'}
@@ -493,15 +483,6 @@ export default function RecetaDetalle() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Modal de copiar receta */}
-      {receta && (
-        <CopiarRecetaModal
-          receta={receta}
-          open={copiarModalOpen}
-          onOpenChange={setCopiarModalOpen}
-        />
-      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { Leaf, User, LogOut, Search, ChefHat, Users, Menu, Bookmark } from 'lucide-react';
+import { Leaf, User, LogOut, Search, ChefHat, Users, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -50,23 +50,13 @@ export default function Layout() {
               </Link>
               
               {user && (
-                <>
-                  <Link
-                    to="/mis-recetas"
-                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ChefHat className="h-4 w-4" />
-                    Mis Recetas
-                  </Link>
-                  
-                  <Link
-                    to="/recetas-guardadas"
-                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Bookmark className="h-4 w-4" />
-                    Guardadas
-                  </Link>
-                </>
+                <Link
+                  to="/mis-recetas"
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ChefHat className="h-4 w-4" />
+                  Mis Recetas
+                </Link>
               )}
               
               <Link
@@ -104,25 +94,14 @@ export default function Layout() {
                     </Link>
                     
                     {user && (
-                      <>
-                        <Link
-                          to="/mis-recetas"
-                          className="flex items-center gap-3 text-base hover:text-primary transition-colors"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <ChefHat className="h-5 w-5" />
-                          Mis Recetas
-                        </Link>
-                        
-                        <Link
-                          to="/recetas-guardadas"
-                          className="flex items-center gap-3 text-base hover:text-primary transition-colors"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <Bookmark className="h-5 w-5" />
-                          Guardadas
-                        </Link>
-                      </>
+                      <Link
+                        to="/mis-recetas"
+                        className="flex items-center gap-3 text-base hover:text-primary transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <ChefHat className="h-5 w-5" />
+                        Mis Recetas
+                      </Link>
                     )}
                     
                     <Link
@@ -203,12 +182,6 @@ export default function Layout() {
                         <Link to="/mis-recetas" className="cursor-pointer">
                           <ChefHat className="mr-2 h-4 w-4" />
                           Mis Recetas
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/recetas-guardadas" className="cursor-pointer">
-                          <Bookmark className="mr-2 h-4 w-4" />
-                          Guardadas
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>

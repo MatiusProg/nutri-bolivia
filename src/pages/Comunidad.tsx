@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Heart, Bookmark, Loader2, Search, SlidersHorizontal, Clock, ChefHat, Copy } from 'lucide-react';
+import { Users, Heart, Bookmark, Loader2, Search, SlidersHorizontal, Clock, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
-import { CopiarRecetaModal } from '@/components/recetas/CopiarRecetaModal';
 import { IRecetaConPerfil, IInteraccionUsuario, TDificultad, DIFICULTADES } from '@/types/receta.types';
 
 export default function Comunidad() {
@@ -23,8 +22,6 @@ export default function Comunidad() {
   const [loading, setLoading] = useState(true);
   const [userInteractions, setUserInteractions] = useState<Record<string, IInteraccionUsuario>>({});
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
-  const [copiarModalOpen, setCopiarModalOpen] = useState(false);
-  const [recetaACopiar, setRecetaACopiar] = useState<IRecetaConPerfil | null>(null);
   
   // Estados de filtros
   const [busqueda, setBusqueda] = useState('');
@@ -43,7 +40,7 @@ export default function Comunidad() {
 
     const loadRecetas = async () => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('recetas_comunidad')
         .select('*')
         .order('created_at', { ascending: false });
@@ -51,7 +48,7 @@ export default function Comunidad() {
       if (error) throw error;
   
       // ADAPTAR datos de la vista al tipo esperado
-      const recetasAdaptadas = (data as any[])?.map((receta: any) => ({
+      const recetasAdaptadas = data?.map(receta => ({
         ...receta,
         perfil: {
           nombre_completo: receta.autor_nombre,
@@ -230,20 +227,6 @@ export default function Comunidad() {
               <div className="mb-4"><SistemaCalificaciones recetaId={receta.id} tamaño="sm" mostrarEstadisticas={false} /></div>
 
               <div className="flex gap-2 mt-auto">
-                {user?.id !== receta.usuario_id && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setRecetaACopiar(receta);
-                      setCopiarModalOpen(true);
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                )}
                 <Button 
                   variant={userInteractions[receta.id]?.hasLiked ? 'default' : 'outline'} 
                   size="sm" 
@@ -268,15 +251,6 @@ export default function Comunidad() {
             </Card>
           ))}
         </div>
-      )}
-
-      {/* Modal de copiar receta */}
-      {recetaACopiar && (
-        <CopiarRecetaModal
-          receta={recetaACopiar}
-          open={copiarModalOpen}
-          onOpenChange={setCopiarModalOpen}
-        />
       )}
     </div>
   );
