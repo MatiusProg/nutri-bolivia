@@ -58,45 +58,57 @@ export function SistemaCalificaciones({
 
   const cargarCalificaciones = async () => {
     try {
-      // Cargar todas las calificaciones - CORREGIDO: calificacion → puntuacion
+      // Cargar todas las calificaciones activas
       const { data: todasCalificaciones, error: errorTodas } = await supabase
         .from('recetas_calificaciones')
-        .select('puntuacion') // ← CAMBIADO
-        .eq('receta_id', recetaId);
-
+        .select('puntuacion')
+        .eq('receta_id', recetaId)
+        .eq('active', true); // ← Solo calificaciones activas
+  
       if (errorTodas) throw errorTodas;
-
+  
       // Calcular estadísticas
       if (todasCalificaciones && todasCalificaciones.length > 0) {
         const distribucion: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         let suma = 0;
-
+  
         todasCalificaciones.forEach((cal: any) => {
-          suma += cal.puntuacion; // ← CAMBIADO
-          distribucion[cal.puntuacion]++; // ← CAMBIADO
+          suma += cal.puntuacion;
+          distribucion[cal.puntuacion]++;
         });
-
+  
+        const promedio = suma / todasCalificaciones.length;
+        
         setEstadisticas({
-          promedio: suma / todasCalificaciones.length,
+          promedio: Math.round(promedio * 10) / 10, // Redondear a 1 decimal
           total: todasCalificaciones.length,
           distribucion,
         });
+      } else {
+        // Resetear estadísticas si no hay calificaciones
+        setEstadisticas({
+          promedio: 0,
+          total: 0,
+          distribucion: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        });
       }
-
-      // Cargar calificación del usuario actual - CORREGIDO
+  
+      // Cargar calificación del usuario actual
       if (user) {
         const { data: calUsuario, error: errorUsuario } = await supabase
           .from('recetas_calificaciones')
-          .select('id, puntuacion') // ← CAMBIADO
+          .select('id, puntuacion')
           .eq('receta_id', recetaId)
           .eq('usuario_id', user.id)
+          .eq('active', true)
           .maybeSingle();
-
+  
         if (errorUsuario) throw errorUsuario;
-        setCalificacionUsuario(calUsuario?.puntuacion || 0); // ← CAMBIADO
+        setCalificacionUsuario(calUsuario?.puntuacion || 0);
       }
     } catch (error) {
       console.error('Error cargando calificaciones:', error);
+      // No mostrar toast para evitar spam en lista de recetas
     }
   };
 
@@ -111,7 +123,7 @@ export function SistemaCalificaciones({
       }
       return;
     }
-
+  
     setLoading(true);
     try {
       // Verificar si ya existe una calificación
@@ -121,31 +133,38 @@ export function SistemaCalificaciones({
         .eq('receta_id', recetaId)
         .eq('usuario_id', user.id)
         .maybeSingle();
-
+  
       if (existente) {
-        // Actualizar calificación existente - CORREGIDO
+        // Actualizar calificación existente
         const { error } = await supabase
           .from('recetas_calificaciones')
-          .update({ puntuacion }) // ← CAMBIADO
+          .update({ 
+            puntuacion,
+            edited: true,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', existente.id);
-
+  
         if (error) throw error;
       } else {
-        // Crear nueva calificación - CORREGIDO
+        // Crear nueva calificación
         const { error } = await supabase
           .from('recetas_calificaciones')
           .insert({
             receta_id: recetaId,
             usuario_id: user.id,
-            puntuacion, // ← CAMBIADO
+            puntuacion,
           });
-
+  
         if (error) throw error;
       }
-
+  
+      // ✅ CRÍTICO: Actualizar estado local inmediatamente
       setCalificacionUsuario(puntuacion);
+      
+      // ✅ CRÍTICO: Forzar recarga completa de estadísticas
       await cargarCalificaciones();
-
+  
       toast({
         title: 'Calificación guardada',
         description: `Has calificado esta receta con ${puntuacion} estrella${puntuacion > 1 ? 's' : ''}`,
