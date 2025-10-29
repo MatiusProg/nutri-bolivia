@@ -60,10 +60,10 @@ export function SistemaCalificaciones({
     try {
       // Cargar todas las calificaciones activas
       const { data: todasCalificaciones, error: errorTodas } = await supabase
-        .from('recetas_calificaciones')
+        .from('recetas_calificaciones' as any)
         .select('puntuacion')
         .eq('receta_id', recetaId)
-        .eq('active', true); // ← Solo calificaciones activas
+        .eq('active', true);
   
       if (errorTodas) throw errorTodas;
   
@@ -96,7 +96,7 @@ export function SistemaCalificaciones({
       // Cargar calificación del usuario actual
       if (user) {
         const { data: calUsuario, error: errorUsuario } = await supabase
-          .from('recetas_calificaciones')
+          .from('recetas_calificaciones' as any)
           .select('id, puntuacion')
           .eq('receta_id', recetaId)
           .eq('usuario_id', user.id)
@@ -128,7 +128,7 @@ export function SistemaCalificaciones({
     try {
       // Verificar si ya existe una calificación
       const { data: existente } = await supabase
-        .from('recetas_calificaciones')
+        .from('recetas_calificaciones' as any)
         .select('id')
         .eq('receta_id', recetaId)
         .eq('usuario_id', user.id)
@@ -137,7 +137,7 @@ export function SistemaCalificaciones({
       if (existente) {
         // Actualizar calificación existente
         const { error } = await supabase
-          .from('recetas_calificaciones')
+          .from('recetas_calificaciones' as any)
           .update({ 
             puntuacion,
             edited: true,
@@ -149,7 +149,7 @@ export function SistemaCalificaciones({
       } else {
         // Crear nueva calificación
         const { error } = await supabase
-          .from('recetas_calificaciones')
+          .from('recetas_calificaciones' as any)
           .insert({
             receta_id: recetaId,
             usuario_id: user.id,
