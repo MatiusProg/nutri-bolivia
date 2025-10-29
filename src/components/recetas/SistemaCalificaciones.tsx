@@ -59,7 +59,7 @@ export function SistemaCalificaciones({
   const cargarCalificaciones = async () => {
     try {
       // Cargar todas las calificaciones activas
-      const { data: todasCalificaciones, error: errorTodas } = await supabase
+      const { data: todasCalificaciones, error: errorTodas } = await (supabase as any)
         .from('recetas_calificaciones')
         .select('puntuacion')
         .eq('receta_id', recetaId)
@@ -95,7 +95,7 @@ export function SistemaCalificaciones({
   
       // Cargar calificación del usuario actual
       if (user) {
-        const { data: calUsuario, error: errorUsuario } = await supabase
+        const { data: calUsuario, error: errorUsuario } = await (supabase as any)
           .from('recetas_calificaciones')
           .select('id, puntuacion')
           .eq('receta_id', recetaId)
@@ -104,7 +104,7 @@ export function SistemaCalificaciones({
           .maybeSingle();
   
         if (errorUsuario) throw errorUsuario;
-        setCalificacionUsuario(calUsuario?.puntuacion || 0);
+        setCalificacionUsuario((calUsuario as any)?.puntuacion || 0);
       }
     } catch (error) {
       console.error('Error cargando calificaciones:', error);
@@ -127,7 +127,7 @@ export function SistemaCalificaciones({
     setLoading(true);
     try {
       // Verificar si ya existe una calificación
-      const { data: existente } = await supabase
+      const { data: existente } = await (supabase as any)
         .from('recetas_calificaciones')
         .select('id')
         .eq('receta_id', recetaId)
@@ -136,19 +136,19 @@ export function SistemaCalificaciones({
   
       if (existente) {
         // Actualizar calificación existente
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('recetas_calificaciones')
           .update({ 
             puntuacion,
             edited: true,
             updated_at: new Date().toISOString()
           })
-          .eq('id', existente.id);
+          .eq('id', (existente as any).id);
   
         if (error) throw error;
       } else {
         // Crear nueva calificación
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('recetas_calificaciones')
           .insert({
             receta_id: recetaId,
