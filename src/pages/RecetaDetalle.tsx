@@ -28,8 +28,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
 import { DIFICULTADES } from '@/types/receta.types';
-import { Copy } from 'lucide-react';
-import { CopiarRecetaModal } from '@/components/recetas/CopiarRecetaModal';
 
 interface Receta {
   id: string;
@@ -77,8 +75,6 @@ export default function RecetaDetalle() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  //Nuevos estados
-  const [copiarModalOpen, setCopiarModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -209,9 +205,7 @@ export default function RecetaDetalle() {
         setHasLiked(true);
         setReceta({ ...receta, contador_likes: receta.contador_likes + 1 });
       }
-    } 
-    await cargarInteracciones();
-    catch (error: any) {
+    } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setActionLoading(null);
@@ -236,9 +230,7 @@ export default function RecetaDetalle() {
         setHasSaved(true);
         setReceta({ ...receta, contador_guardados: receta.contador_guardados + 1 });
       }
-    } 
-    await cargarInteracciones();
-    catch (error: any) {
+    } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setActionLoading(null);
@@ -357,15 +349,6 @@ export default function RecetaDetalle() {
               </>
             ) : (
               <>
-                {/* ✅ NUEVO: Botón Copiar */}
-                <Button
-                  variant="outline"
-                  onClick={() => setCopiarModalOpen(true)}
-                  className="gap-2"
-                >
-                  <Copy className="h-4 w-4" />
-                  Copiar Receta
-                </Button>
                 <Button
                   variant={hasLiked ? 'default' : 'outline'}
                   onClick={handleLike}
@@ -502,14 +485,6 @@ export default function RecetaDetalle() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {/* ✅ NUEVO: Modal de Copiar Receta */}
-      {receta && (
-        <CopiarRecetaModal
-          open={copiarModalOpen}
-          onOpenChange={setCopiarModalOpen}
-          recetaOriginal={receta}
-        />
-      )}
     </div>
   );
 }

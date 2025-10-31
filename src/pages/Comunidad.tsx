@@ -14,7 +14,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
 import { IRecetaConPerfil, IInteraccionUsuario, TDificultad, TVisibilidad, IIngrediente, INutrientesTotales, DIFICULTADES } from '@/types/receta.types';
-import { CopiarRecetaModal } from '@/components/recetas/CopiarRecetaModal';
 
 export default function Comunidad() {
   const { user } = useAuth();
@@ -23,9 +22,6 @@ export default function Comunidad() {
   const [loading, setLoading] = useState(true);
   const [userInteractions, setUserInteractions] = useState<Record<string, IInteraccionUsuario>>({});
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
-  //Nuevos imports para copiar receta
-  const [copiarModalOpen, setCopiarModalOpen] = useState(false);
-  const [recetaACopiar, setRecetaACopiar] = useState<any>(null);
   
   // Estados de filtros
   const [busqueda, setBusqueda] = useState('');
@@ -120,10 +116,6 @@ export default function Comunidad() {
         setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasLiked: true } });
         setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_likes: r.contador_likes + 1 } : r));
       }
-      // Recargar interacciones del usuario
-      await loadUserInteractions();
-      // Recargar recetas para actualizar contadores
-      await loadRecetas();
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
@@ -150,10 +142,6 @@ export default function Comunidad() {
         setUserInteractions({ ...userInteractions, [recetaId]: { ...userInteractions[recetaId], hasSaved: true } });
         setRecetas(recetas.map(r => r.id === recetaId ? { ...r, contador_guardados: r.contador_guardados + 1 } : r));
       }
-      // Recargar interacciones del usuario
-      await loadUserInteractions();
-      // Recargar recetas para actualizar contadores
-      await loadRecetas();
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
@@ -245,20 +233,6 @@ export default function Comunidad() {
               <div className="mb-4"><SistemaCalificaciones recetaId={receta.id} tamaño="sm" mostrarEstadisticas={false} /></div>
 
               <div className="flex gap-2 mt-auto">
-                 {/* ✅ NUEVO: Botón Copiar Receta */}
-                {user?.id !== receta.usuario_id && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setRecetaACopiar(receta);
-                      setCopiarModalOpen(true);
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                )}
                 <Button 
                   variant={userInteractions[receta.id]?.hasLiked ? 'default' : 'outline'} 
                   size="sm" 
@@ -283,14 +257,6 @@ export default function Comunidad() {
             </Card>
           ))}
         </div>
-      )}
-      {/* ✅ NUEVO: Modal de Copiar Receta */}
-      {recetaACopiar && (
-        <CopiarRecetaModal
-          open={copiarModalOpen}
-          onOpenChange={setCopiarModalOpen}
-          recetaOriginal={recetaACopiar}
-        />
       )}
     </div>
   );

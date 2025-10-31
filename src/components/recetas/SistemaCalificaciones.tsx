@@ -63,7 +63,7 @@ export function SistemaCalificaciones({
         .from('recetas_calificaciones')
         .select('puntuacion')
         .eq('receta_id', recetaId)
-       // .eq('active', true); // ← Solo calificaciones activas
+        .eq('active', true); // ← Solo calificaciones activas
   
       if (errorTodas) throw errorTodas;
   
@@ -100,7 +100,7 @@ export function SistemaCalificaciones({
           .select('id, puntuacion')
           .eq('receta_id', recetaId)
           .eq('usuario_id', user.id)
-          // .eq('active', true)
+          .eq('active', true)
           .maybeSingle();
   
         if (errorUsuario) throw errorUsuario;
