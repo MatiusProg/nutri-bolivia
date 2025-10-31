@@ -209,9 +209,8 @@ export default function RecetaDetalle() {
         setHasLiked(true);
         setReceta({ ...receta, contador_likes: receta.contador_likes + 1 });
       }
-    } 
-    await cargarInteracciones();
-    catch (error: any) {
+      await cargarInteracciones();
+    } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setActionLoading(null);
@@ -236,9 +235,8 @@ export default function RecetaDetalle() {
         setHasSaved(true);
         setReceta({ ...receta, contador_guardados: receta.contador_guardados + 1 });
       }
-    } 
-    await cargarInteracciones();
-    catch (error: any) {
+      await cargarInteracciones();
+    } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setActionLoading(null);
