@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Heart, Bookmark, Loader2, Search, SlidersHorizontal, Clock, ChefHat, Copy } from 'lucide-react';
+import { Users, Heart, Bookmark, Loader2, Search, SlidersHorizontal, Clock, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
