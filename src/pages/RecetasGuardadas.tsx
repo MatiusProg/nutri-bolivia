@@ -28,11 +28,16 @@ export default function RecetasGuardadas() {
 
   const loadRecetasGuardadas = async () => {
     try {
-      // Obtener IDs de recetas guardadas
+      if (!user) {
+        navigate("/");
+        return;
+      }
+
+      // 1. Obtener IDs de recetas guardadas
       const { data: interacciones, error: interError } = await supabase
         .from("recetas_interacciones")
         .select("receta_id")
-        .eq("usuario_id", user?.id)
+        .eq("usuario_id", user.id)
         .eq("tipo", "guardar");
 
       if (interError) throw interError;
@@ -45,7 +50,7 @@ export default function RecetasGuardadas() {
 
       const recetaIds = interacciones.map((i: any) => i.receta_id);
 
-      // Obtener recetas desde la vista comunidad
+      // 2. Cargar recetas desde comunidad (YA INCLUYE los promedios)
       const { data: recetasData, error: recetasError } = await supabase
         .from("recetas_comunidad")
         .select("*")
@@ -54,7 +59,7 @@ export default function RecetasGuardadas() {
 
       if (recetasError) throw recetasError;
 
-      // Adaptar datos
+      // 3. Adaptar datos (USAR columnas existentes de la vista)
       const recetasAdaptadas =
         recetasData?.map((receta: any) => ({
           ...receta,
@@ -63,10 +68,14 @@ export default function RecetasGuardadas() {
             avatar_url: receta.autor_avatar,
             email: "",
           },
+          // ✅ USAR DIRECTAMENTE las columnas de la vista
           promedio_calificacion: receta.promedio_calificacion || 0,
           total_calificaciones: receta.total_calificaciones || 0,
+          contador_likes: receta.contador_likes || 0,
+          contador_guardados: receta.contador_guardados || 0,
         })) || [];
 
+      console.log("📊 Recetas guardadas con promedios:", recetasAdaptadas);
       setRecetas(recetasAdaptadas);
     } catch (error: any) {
       console.error("Error:", error);
