@@ -51,69 +51,33 @@ export default function Comunidad() {
     }
   }, [user, recetas]);
 
-  useEffect(() => {
-    const handleRecetasActualizadas = () => {
-      console.log("🔄 Evento recibido: recargando recetas...");
-      loadRecetas();
-    };
-
-    window.addEventListener("recetasActualizadas", handleRecetasActualizadas);
-
-    return () => {
-      window.removeEventListener("recetasActualizadas", handleRecetasActualizadas);
-    };
-  }, []);
-
   const loadRecetas = async () => {
     try {
-      console.log("🔄 Cargando recetas con promedios...");
+      console.log("🔄 Cargando recetas desde vista comunidad...");
 
-      // 1. Cargar recetas desde la vista comunidad
-      const { data: recetasData, error: recetasError } = await supabase
+      // 1. Cargar recetas desde la vista comunidad (YA INCLUYE los promedios)
+      const { data, error } = await supabase
         .from("recetas_comunidad")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (recetasError) throw recetasError;
+      if (error) throw error;
 
-      if (!recetasData || recetasData.length === 0) {
-        setRecetas([]);
-        setLoading(false);
-        return;
-      }
+      console.log("📊 Recetas cargadas:", data?.length);
 
-      console.log("📊 Recetas cargadas:", recetasData.length);
-
-      // 2. Cargar los promedios de calificaciones desde la tabla recetas
-      const { data: promediosData, error: promediosError } = await supabase
-        .from("recetas")
-        .select("id, promedio_calificacion, total_calificaciones")
-        .in(
-          "id",
-          recetasData.map((r) => r.id),
-        );
-
-      if (promediosError) {
-        console.error("Error cargando promedios:", promediosError);
-        // Continuar sin promedios en caso de error
-      }
-
-      // 3. Crear mapa rápido de promedios
-      const promediosMap = new Map();
-      promediosData?.forEach((receta) => {
-        promediosMap.set(receta.id, {
-          promedio: receta.promedio_calificacion || 0,
-          total: receta.total_calificaciones || 0,
+      // 2. DEBUG: Ver los datos que llegan de la vista
+      data?.forEach((receta) => {
+        console.log("🔍 Datos de vista comunidad:", {
+          nombre: receta.nombre,
+          promedio_vista: receta.promedio_calificacion,
+          total_vista: receta.total_calificaciones,
+          tiene_promedio: !!receta.promedio_calificacion,
         });
       });
 
-      console.log("🗺️ Mapa de promedios:", promediosMap);
-
-      // 4. Combinar datos
-      const recetasAdaptadas = recetasData.map((receta) => {
-        const promedioInfo = promediosMap.get(receta.id) || { promedio: 0, total: 0 };
-
-        return {
+      // 3. Adaptar datos - USAR DIRECTAMENTE las columnas de la vista
+      const recetasAdaptadas =
+        data?.map((receta) => ({
           ...receta,
           ingredientes: receta.ingredientes as unknown as IIngrediente[],
           nutrientes_totales: receta.nutrientes_totales as unknown as INutrientesTotales,
@@ -126,16 +90,17 @@ export default function Comunidad() {
             avatar_url: receta.autor_avatar,
             email: "",
           },
-          // ✅ AÑADIR LOS PROMEDIOS DIRECTAMENTE A LA RECETA
-          promedio_calificacion: promedioInfo.promedio,
-          total_calificaciones: promedioInfo.total,
-        };
-      });
+          // ✅ USAR DIRECTAMENTE las columnas que YA EXISTEN en la vista
+          promedio_calificacion: receta.promedio_calificacion || 0,
+          total_calificaciones: receta.total_calificaciones || 0,
+          contador_likes: receta.contador_likes || 0,
+          contador_guardados: receta.contador_guardados || 0,
+        })) || [];
 
-      console.log("✅ Recetas finales con promedios:", recetasAdaptadas);
+      console.log("✅ Recetas finales:", recetasAdaptadas);
       setRecetas(recetasAdaptadas);
     } catch (error: any) {
-      console.error("❌ Error cargando recetas:", error);
+      console.error("❌ Error:", error);
       toast({
         title: "Error",
         description: "No se pudieron cargar las recetas",
