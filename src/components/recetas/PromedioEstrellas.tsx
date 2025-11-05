@@ -41,8 +41,8 @@ export function PromedioEstrellas({
     return () => window.removeEventListener("recetasActualizadas", handleUpdate);
   }, []);
 
-  // Si no hay calificaciones (solo verificar total)
-  if (!localTotal || localTotal === 0) {
+  // Si no hay calificaciones
+  if (localTotal === 0) {
     return (
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <span>⭐ Nuevo</span>
