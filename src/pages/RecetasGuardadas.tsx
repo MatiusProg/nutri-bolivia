@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { SistemaCalificaciones } from "@/components/recetas/SistemaCalificaciones";
 import { IRecetaConPerfil, DIFICULTADES } from "@/types/receta.types";
-import { PromedioEstrellas } from "@/components/recetas/PromedioEstrellas";
 
 export default function RecetasGuardadas() {
   const { user } = useAuth();
@@ -26,6 +25,19 @@ export default function RecetasGuardadas() {
     }
     loadRecetasGuardadas();
   }, [user, navigate]);
+
+  useEffect(() => {
+    const handleRecetasActualizadas = () => {
+      console.log("🔄 Evento recibido: recargando recetas...");
+      loadRecetas();
+    };
+
+    window.addEventListener("recetasActualizadas", handleRecetasActualizadas);
+
+    return () => {
+      window.removeEventListener("recetasActualizadas", handleRecetasActualizadas);
+    };
+  }, []);
 
   const loadRecetasGuardadas = async () => {
     try {
