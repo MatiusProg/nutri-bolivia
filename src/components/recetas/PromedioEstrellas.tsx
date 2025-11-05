@@ -21,14 +21,18 @@ export function PromedioEstrellas({
   tamaño = "sm",
   mostrarTexto = true,
 }: PromedioEstrellasProps) {
-  const [localPromedio, setLocalPromedio] = useState(promedio);
-  const [localTotal, setLocalTotal] = useState(totalCalificaciones);
+  // ✅ Coercionar a número para evitar valores undefined/null
+  const promedioNum = Number(promedio) || 0;
+  const totalNum = Number(totalCalificaciones) || 0;
+
+  const [localPromedio, setLocalPromedio] = useState(promedioNum);
+  const [localTotal, setLocalTotal] = useState(totalNum);
 
   // ✅ Sincronizar con cambios externos
   useEffect(() => {
-    setLocalPromedio(promedio);
-    setLocalTotal(totalCalificaciones);
-  }, [promedio, totalCalificaciones]);
+    setLocalPromedio(promedioNum);
+    setLocalTotal(totalNum);
+  }, [promedioNum, totalNum]);
 
   // ✅ Escuchar eventos de actualización
   useEffect(() => {
@@ -41,7 +45,7 @@ export function PromedioEstrellas({
     return () => window.removeEventListener("recetasActualizadas", handleUpdate);
   }, []);
 
-  // Si no hay calificaciones (solo verificar total)
+  // Si no hay calificaciones (ambos deben ser 0)
   if (localTotal === 0 && localPromedio === 0) {
     return (
       <div className="flex items-center gap-1 text-xs text-muted-foreground">

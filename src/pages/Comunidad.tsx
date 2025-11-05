@@ -24,6 +24,7 @@ import {
 } from "@/types/receta.types";
 import { CopiarRecetaModal } from "@/components/recetas/CopiarRecetaModal";
 import { PromedioEstrellas } from "@/components/recetas/PromedioEstrellas";
+import { recomputarPromediosPara } from "@/utils/recomputarPromedios";
 
 type RecetaConPromedios = IRecetaConPerfil & {
   promedio_calificacion?: number;
@@ -64,6 +65,33 @@ export default function Comunidad() {
       loadUserInteractions();
     }
   }, [user, recetas]);
+
+  // ✅ NUEVO: Suscripción realtime a cambios en calificaciones
+  useEffect(() => {
+    const channel = supabase
+      .channel("calificaciones-comunidad")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "recetas_calificaciones",
+        },
+        async (payload) => {
+          console.log("🔔 Cambio en calificaciones detectado:", payload);
+          // Recomputar promedios para todas las recetas cargadas
+          if (recetas.length > 0) {
+            const recetasActualizadas = await recomputarPromediosPara(recetas);
+            setRecetas(recetasActualizadas);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [recetas]);
 
   const loadRecetas = async () => {
     try {
@@ -111,8 +139,22 @@ export default function Comunidad() {
           contador_guardados: receta.contador_guardados || 0,
         })) || [];
 
-      console.log("✅ Recetas finales:", recetasAdaptadas);
-      setRecetas(recetasAdaptadas);
+      console.log("📊 Recetas antes del recompute:", recetasAdaptadas.map(r => ({
+        nombre: r.nombre,
+        promedio_antes: r.promedio_calificacion,
+        total_antes: r.total_calificaciones
+      })));
+
+      // ✅ CRÍTICO: Recomputar promedios en tiempo real desde recetas_calificaciones
+      const recetasConPromediosReales = await recomputarPromediosPara(recetasAdaptadas);
+
+      console.log("✅ Recetas después del recompute:", recetasConPromediosReales.map(r => ({
+        nombre: r.nombre,
+        promedio_despues: r.promedio_calificacion,
+        total_despues: r.total_calificaciones
+      })));
+
+      setRecetas(recetasConPromediosReales);
     } catch (error: any) {
       console.error("❌ Error:", error);
       toast({
