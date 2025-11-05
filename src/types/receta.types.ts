@@ -20,8 +20,8 @@ export interface IIngrediente {
   nutrientes?: Partial<INutrientesTotales>;
 }
 
-export type TVisibilidad = 'privada' | 'publica' | 'enlace';
-export type TDificultad = 'facil' | 'medio' | 'dificil';
+export type TVisibilidad = "privada" | "publica" | "enlace";
+export type TDificultad = "facil" | "medio" | "dificil";
 
 export interface IReceta {
   id: string;
@@ -49,6 +49,8 @@ export interface IRecetaConPerfil extends IReceta {
     email: string;
     promedio_calificacion?: number;
     total_calificaciones?: number;
+    contador_likes?: number;
+    contador_guardados?: number;
   };
 }
 
@@ -58,9 +60,9 @@ export interface IInteraccionUsuario {
 }
 
 export interface IFiltrosRecetas {
-  dificultad: TDificultad | 'todas';
+  dificultad: TDificultad | "todas";
   tiempoMax: number | null;
-  ordenarPor: 'fecha' | 'popularidad' | 'calificacion' | 'tiempo';
+  ordenarPor: "fecha" | "popularidad" | "calificacion" | "tiempo";
   busqueda: string;
 }
 
@@ -76,20 +78,20 @@ export interface IEstadisticasCalificacion {
 export const LIMITE_RECETAS_PRIVADAS = 5;
 
 export const ETIQUETAS_DISPONIBLES = [
-  'vegetariano',
-  'vegano',
-  'sin-gluten',
-  'bajo-carbohidratos',
-  'alto-proteinas',
-  'rapido',
-  'economico',
-  'tradicional',
-  'saludable',
-  'postres',
+  "vegetariano",
+  "vegano",
+  "sin-gluten",
+  "bajo-carbohidratos",
+  "alto-proteinas",
+  "rapido",
+  "economico",
+  "tradicional",
+  "saludable",
+  "postres",
 ] as const;
 
 export const DIFICULTADES: Record<TDificultad, string> = {
-  facil: 'Fácil',
-  medio: 'Medio',
-  dificil: 'Difícil',
+  facil: "Fácil",
+  medio: "Medio",
+  dificil: "Difícil",
 };
