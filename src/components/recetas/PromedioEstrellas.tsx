@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface PromedioEstrellasProps {
   promedio: number;
@@ -20,12 +21,41 @@ export function PromedioEstrellas({
   tamaño = "sm",
   mostrarTexto = true,
 }: PromedioEstrellasProps) {
-  // Calcular estrellas llenas y media estrella
-  const estrellasLlenas = Math.floor(promedio);
-  const tieneMediaEstrella = promedio - estrellasLlenas >= 0.3; // Más flexible
+  const [localPromedio, setLocalPromedio] = useState(promedio);
+  const [localTotal, setLocalTotal] = useState(totalCalificaciones);
+
+  // ✅ Sincronizar con cambios externos
+  useEffect(() => {
+    setLocalPromedio(promedio);
+    setLocalTotal(totalCalificaciones);
+  }, [promedio, totalCalificaciones]);
+
+  // ✅ Escuchar eventos de actualización
+  useEffect(() => {
+    const handleUpdate = () => {
+      // Forzar rerender
+      setLocalPromedio((prev) => prev);
+    };
+
+    window.addEventListener("recetasActualizadas", handleUpdate);
+    return () => window.removeEventListener("recetasActualizadas", handleUpdate);
+  }, []);
+
+  // Si no hay calificaciones
+  if (!localPromedio || localPromedio === 0 || localTotal === 0) {
+    return (
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <span>⭐ Nuevo</span>
+      </div>
+    );
+  }
+
+  // Calcular estrellas visuales
+  const estrellasLlenas = Math.floor(localPromedio);
+  const tieneMediaEstrella = localPromedio - estrellasLlenas >= 0.3;
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-2">
       {/* Estrellas visuales */}
       <div className="flex gap-0.5">
         {[1, 2, 3, 4, 5].map((estrella) => (
@@ -34,20 +64,20 @@ export function PromedioEstrellas({
             className={cn(
               TAMAÑOS[tamaño],
               estrella <= estrellasLlenas
-                ? "fill-yellow-400 text-yellow-400" // Amarillo más visible
+                ? "fill-yellow-400 text-yellow-400"
                 : estrella === estrellasLlenas + 1 && tieneMediaEstrella
                   ? "fill-yellow-400/50 text-yellow-400"
-                  : "text-gray-300", // Gris para estrellas vacías
+                  : "text-gray-300",
             )}
           />
         ))}
       </div>
 
       {/* Texto del promedio */}
-      {mostrarTexto !== false && ( // ✅ Solo mostrar texto si no es false
+      {mostrarTexto && (
         <div className="flex items-center gap-1 text-xs">
-          <span className="font-semibold text-foreground">{promedio > 0 ? promedio.toFixed(1) : "Nuevo"}</span>
-          {totalCalificaciones > 0 && <span className="text-muted-foreground">({totalCalificaciones})</span>}
+          <span className="font-semibold text-foreground">{localPromedio.toFixed(1)}</span>
+          <span className="text-muted-foreground">({localTotal})</span>
         </div>
       )}
     </div>
