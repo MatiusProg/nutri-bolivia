@@ -47,11 +47,9 @@ export interface IRecetaConPerfil extends IReceta {
     nombre_completo: string | null;
     avatar_url: string | null;
     email: string;
-    promedio_calificacion?: number;
-    total_calificaciones?: number;
-    contador_likes?: number;
-    contador_guardados?: number;
   };
+  promedio_calificacion?: number;
+  total_calificaciones?: number;
 }
 
 export interface IInteraccionUsuario {
