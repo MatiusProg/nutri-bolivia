@@ -51,53 +51,91 @@ export default function Comunidad() {
     }
   }, [user, recetas]);
 
+  useEffect(() => {
+    const handleRecetasActualizadas = () => {
+      console.log("🔄 Evento recibido: recargando recetas...");
+      loadRecetas();
+    };
+
+    window.addEventListener("recetasActualizadas", handleRecetasActualizadas);
+
+    return () => {
+      window.removeEventListener("recetasActualizadas", handleRecetasActualizadas);
+    };
+  }, []);
+
   const loadRecetas = async () => {
     try {
-      console.log("🔄 Cargando recetas desde vista comunidad...");
+      console.log("🔄 Cargando recetas con promedios...");
 
-      const { data, error } = await supabase
+      // 1. Cargar recetas desde la vista comunidad
+      const { data: recetasData, error: recetasError } = await supabase
         .from("recetas_comunidad")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (recetasError) throw recetasError;
 
-      console.log("📊 Recetas cargadas:", data?.length);
+      if (!recetasData || recetasData.length === 0) {
+        setRecetas([]);
+        setLoading(false);
+        return;
+      }
 
-      // ADAPTAR datos - USAR DIRECTAMENTE las columnas de la vista
-      const recetasAdaptadas =
-        data?.map((receta) => {
-          console.log("🔍 Receta individual:", {
-            nombre: receta.nombre,
-            promedio: receta.promedio_calificacion,
-            total: receta.total_calificaciones,
-          });
+      console.log("📊 Recetas cargadas:", recetasData.length);
 
-          return {
-            ...receta,
-            ingredientes: receta.ingredientes as unknown as IIngrediente[],
-            nutrientes_totales: receta.nutrientes_totales as unknown as INutrientesTotales,
-            visibilidad: receta.visibilidad as TVisibilidad,
-            dificultad: receta.dificultad as TDificultad | null,
-            etiquetas: receta.etiquetas as string[] | null,
-            es_duplicada: receta.es_duplicada ?? false,
-            perfil: {
-              nombre_completo: receta.autor_nombre,
-              avatar_url: receta.autor_avatar,
-              email: "",
-            },
-            // ✅ USAR DIRECTAMENTE las columnas que YA EXISTEN en la vista
-            promedio_calificacion: receta.promedio_calificacion || 0,
-            total_calificaciones: receta.total_calificaciones || 0,
-            contador_likes: receta.contador_likes || 0,
-            contador_guardados: receta.contador_guardados || 0,
-          };
-        }) || [];
+      // 2. Cargar los promedios de calificaciones desde la tabla recetas
+      const { data: promediosData, error: promediosError } = await supabase
+        .from("recetas")
+        .select("id, promedio_calificacion, total_calificaciones")
+        .in(
+          "id",
+          recetasData.map((r) => r.id),
+        );
 
-      console.log("✅ Recetas finales:", recetasAdaptadas);
+      if (promediosError) {
+        console.error("Error cargando promedios:", promediosError);
+        // Continuar sin promedios en caso de error
+      }
+
+      // 3. Crear mapa rápido de promedios
+      const promediosMap = new Map();
+      promediosData?.forEach((receta) => {
+        promediosMap.set(receta.id, {
+          promedio: receta.promedio_calificacion || 0,
+          total: receta.total_calificaciones || 0,
+        });
+      });
+
+      console.log("🗺️ Mapa de promedios:", promediosMap);
+
+      // 4. Combinar datos
+      const recetasAdaptadas = recetasData.map((receta) => {
+        const promedioInfo = promediosMap.get(receta.id) || { promedio: 0, total: 0 };
+
+        return {
+          ...receta,
+          ingredientes: receta.ingredientes as unknown as IIngrediente[],
+          nutrientes_totales: receta.nutrientes_totales as unknown as INutrientesTotales,
+          visibilidad: receta.visibilidad as TVisibilidad,
+          dificultad: receta.dificultad as TDificultad | null,
+          etiquetas: receta.etiquetas as string[] | null,
+          es_duplicada: receta.es_duplicada ?? false,
+          perfil: {
+            nombre_completo: receta.autor_nombre,
+            avatar_url: receta.autor_avatar,
+            email: "",
+          },
+          // ✅ AÑADIR LOS PROMEDIOS DIRECTAMENTE A LA RECETA
+          promedio_calificacion: promedioInfo.promedio,
+          total_calificaciones: promedioInfo.total,
+        };
+      });
+
+      console.log("✅ Recetas finales con promedios:", recetasAdaptadas);
       setRecetas(recetasAdaptadas);
     } catch (error: any) {
-      console.error("❌ Error:", error);
+      console.error("❌ Error cargando recetas:", error);
       toast({
         title: "Error",
         description: "No se pudieron cargar las recetas",
@@ -230,15 +268,6 @@ export default function Comunidad() {
       </div>
     );
 
-  // DEBUG TEMPORAL - justo antes del return principal
-  console.log(
-    "🎯 Recetas listas para render:",
-    recetasFiltradas.map((r) => ({
-      nombre: r.nombre,
-      promedio: r.promedio_calificacion,
-      total: r.total_calificaciones,
-    })),
-  );
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
