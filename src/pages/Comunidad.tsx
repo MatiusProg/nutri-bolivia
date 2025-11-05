@@ -25,15 +25,10 @@ import {
 import { CopiarRecetaModal } from "@/components/recetas/CopiarRecetaModal";
 import { PromedioEstrellas } from "@/components/recetas/PromedioEstrellas";
 
-type RecetaConPromedios = IRecetaConPerfil & {
-  promedio_calificacion?: number;
-  total_calificaciones?: number;
-};
-
 export default function Comunidad() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [recetas, setRecetas] = useState<RecetaConPromedios[]>([]);
+  const [recetas, setRecetas] = useState<IRecetaConPerfil[]>([]);
   const [loading, setLoading] = useState(true);
   const [userInteractions, setUserInteractions] = useState<Record<string, IInteraccionUsuario>>({});
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
