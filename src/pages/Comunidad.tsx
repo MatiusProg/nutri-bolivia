@@ -43,6 +43,15 @@ export default function Comunidad() {
 
   useEffect(() => {
     loadRecetas();
+    
+    // Escuchar eventos de actualización
+    const handleRecetasActualizadas = () => {
+      console.log("🔄 Evento recetasActualizadas recibido en Comunidad");
+      loadRecetas();
+    };
+
+    window.addEventListener("recetasActualizadas", handleRecetasActualizadas);
+    return () => window.removeEventListener("recetasActualizadas", handleRecetasActualizadas);
   }, []);
 
   useEffect(() => {
