@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { SistemaCalificaciones } from "@/components/recetas/SistemaCalificaciones";
 import { IRecetaConPerfil, DIFICULTADES } from "@/types/receta.types";
+import { PromedioEstrellas } from "@/components/recetas/PromedioEstrellas";
 
 export default function RecetasGuardadas() {
   const { user } = useAuth();
@@ -28,16 +29,11 @@ export default function RecetasGuardadas() {
 
   const loadRecetasGuardadas = async () => {
     try {
-      if (!user) {
-        navigate("/");
-        return;
-      }
-
-      // 1. Obtener IDs de recetas guardadas
+      // Obtener IDs de recetas guardadas
       const { data: interacciones, error: interError } = await supabase
         .from("recetas_interacciones")
         .select("receta_id")
-        .eq("usuario_id", user.id)
+        .eq("usuario_id", user?.id)
         .eq("tipo", "guardar");
 
       if (interError) throw interError;
@@ -50,7 +46,7 @@ export default function RecetasGuardadas() {
 
       const recetaIds = interacciones.map((i: any) => i.receta_id);
 
-      // 2. Cargar recetas desde comunidad (YA INCLUYE los promedios)
+      // Obtener recetas desde la vista comunidad
       const { data: recetasData, error: recetasError } = await supabase
         .from("recetas_comunidad")
         .select("*")
@@ -59,16 +55,7 @@ export default function RecetasGuardadas() {
 
       if (recetasError) throw recetasError;
 
-      // 3. DEBUG: Ver datos de la vista
-      recetasData?.forEach((receta) => {
-        console.log("🔍 Receta guardada - datos vista:", {
-          nombre: receta.nombre,
-          promedio: receta.promedio_calificacion,
-          total: receta.total_calificaciones,
-        });
-      });
-
-      // 4. Adaptar datos (USAR columnas existentes de la vista)
+      // Adaptar datos
       const recetasAdaptadas =
         recetasData?.map((receta: any) => ({
           ...receta,
@@ -77,14 +64,10 @@ export default function RecetasGuardadas() {
             avatar_url: receta.autor_avatar,
             email: "",
           },
-          // ✅ USAR DIRECTAMENTE las columnas de la vista
           promedio_calificacion: receta.promedio_calificacion || 0,
           total_calificaciones: receta.total_calificaciones || 0,
-          contador_likes: receta.contador_likes || 0,
-          contador_guardados: receta.contador_guardados || 0,
         })) || [];
 
-      console.log("📊 Recetas guardadas con promedios:", recetasAdaptadas);
       setRecetas(recetasAdaptadas);
     } catch (error: any) {
       console.error("Error:", error);
