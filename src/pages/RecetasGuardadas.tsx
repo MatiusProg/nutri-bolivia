@@ -62,6 +62,8 @@ export default function RecetasGuardadas() {
           avatar_url: receta.autor_avatar,
           email: ''
         }
+        promedio_calificacion: receta.promedio_calificacion || 0,
+        total_calificaciones: receta.total_calificaciones || 0
       })) || [];
 
       setRecetas(recetasAdaptadas);
@@ -201,8 +203,13 @@ export default function RecetasGuardadas() {
                 </p>
               )}
 
-              <div className="mb-4">
-                <SistemaCalificaciones recetaId={receta.id} tamaño="sm" mostrarEstadisticas={false} />
+              <div className="mb-3">
+                <PromedioEstrellas 
+                  promedio={receta.promedio_calificacion || 0}
+                  totalCalificaciones={receta.total_calificaciones || 0}
+                  tamaño="sm"
+                  mostrarTexto={true}
+                />
               </div>
 
               <div className="flex gap-2 mt-auto">
