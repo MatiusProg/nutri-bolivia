@@ -12,10 +12,15 @@ import { SistemaCalificaciones } from "@/components/recetas/SistemaCalificacione
 import { IRecetaConPerfil, DIFICULTADES } from "@/types/receta.types";
 import { PromedioEstrellas } from "@/components/recetas/PromedioEstrellas";
 
+type RecetaConPromedios = IRecetaConPerfil & {
+  promedio_calificacion?: number;
+  total_calificaciones?: number;
+};
+
 export default function RecetasGuardadas() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [recetas, setRecetas] = useState<IRecetaConPerfil[]>([]);
+  const [recetas, setRecetas] = useState<RecetaConPromedios[]>([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
