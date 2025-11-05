@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Star, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/hooks/use-toast';
+import { useState, useEffect } from "react";
+import { Star, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
-type TamañoEstrellas = 'sm' | 'md' | 'lg';
+type TamañoEstrellas = "sm" | "md" | "lg";
 
 interface SistemaCalificacionesProps {
   recetaId: string;
@@ -30,14 +30,14 @@ interface IEstadisticas {
 }
 
 const TAMAÑOS: Record<TamañoEstrellas, string> = {
-  sm: 'h-4 w-4',
-  md: 'h-5 w-5',
-  lg: 'h-6 w-6',
+  sm: "h-4 w-4",
+  md: "h-5 w-5",
+  lg: "h-6 w-6",
 };
 
 export function SistemaCalificaciones({
   recetaId,
-  tamaño = 'md',
+  tamaño = "md",
   mostrarEstadisticas = true,
   readonly = false,
   className,
@@ -60,25 +60,25 @@ export function SistemaCalificaciones({
     try {
       // Cargar todas las calificaciones activas
       const { data: todasCalificaciones, error: errorTodas } = await supabase
-        .from('recetas_calificaciones')
-        .select('puntuacion')
-        .eq('receta_id', recetaId)
-        .eq('active', true); // ← Solo calificaciones activas
-  
+        .from("recetas_calificaciones")
+        .select("puntuacion")
+        .eq("receta_id", recetaId)
+        .eq("active", true); // ← Solo calificaciones activas
+
       if (errorTodas) throw errorTodas;
-  
+
       // Calcular estadísticas
       if (todasCalificaciones && todasCalificaciones.length > 0) {
         const distribucion: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         let suma = 0;
-  
+
         todasCalificaciones.forEach((cal: any) => {
           suma += cal.puntuacion;
           distribucion[cal.puntuacion]++;
         });
-  
+
         const promedio = suma / todasCalificaciones.length;
-        
+
         setEstadisticas({
           promedio: Math.round(promedio * 10) / 10, // Redondear a 1 decimal
           total: todasCalificaciones.length,
@@ -89,25 +89,25 @@ export function SistemaCalificaciones({
         setEstadisticas({
           promedio: 0,
           total: 0,
-          distribucion: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+          distribucion: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         });
       }
-  
+
       // Cargar calificación del usuario actual
       if (user) {
         const { data: calUsuario, error: errorUsuario } = await supabase
-          .from('recetas_calificaciones')
-          .select('id, puntuacion')
-          .eq('receta_id', recetaId)
-          .eq('usuario_id', user.id)
-          .eq('active', true)
+          .from("recetas_calificaciones")
+          .select("id, puntuacion")
+          .eq("receta_id", recetaId)
+          .eq("usuario_id", user.id)
+          .eq("active", true)
           .maybeSingle();
-  
+
         if (errorUsuario) throw errorUsuario;
         setCalificacionUsuario(calUsuario?.puntuacion || 0);
       }
     } catch (error) {
-      console.error('Error cargando calificaciones:', error);
+      console.error("Error cargando calificaciones:", error);
       // No mostrar toast para evitar spam en lista de recetas
     }
   };
@@ -116,64 +116,72 @@ export function SistemaCalificaciones({
     if (readonly || !user) {
       if (!user) {
         toast({
-          title: 'Inicia sesión',
-          description: 'Debes iniciar sesión para calificar recetas',
-          variant: 'destructive',
+          title: "Inicia sesión",
+          description: "Debes iniciar sesión para calificar recetas",
+          variant: "destructive",
         });
       }
       return;
     }
-  
+
+    // ✅ PREVENIR que usuarios califiquen sus propias recetas
+    if (esOwner) {
+      toast({
+        title: "Acción no permitida",
+        description: "No puedes calificar tus propias recetas",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       // Verificar si ya existe una calificación
       const { data: existente } = await supabase
-        .from('recetas_calificaciones')
-        .select('id')
-        .eq('receta_id', recetaId)
-        .eq('usuario_id', user.id)
+        .from("recetas_calificaciones")
+        .select("id")
+        .eq("receta_id", recetaId)
+        .eq("usuario_id", user.id)
         .maybeSingle();
-  
+
       if (existente) {
         // Actualizar calificación existente
         const { error } = await supabase
-          .from('recetas_calificaciones')
-          .update({ 
+          .from("recetas_calificaciones")
+          .update({
             puntuacion,
             edited: true,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
-          .eq('id', existente.id);
-  
+          .eq("id", existente.id);
+
         if (error) throw error;
       } else {
         // Crear nueva calificación
-        const { error } = await supabase
-          .from('recetas_calificaciones')
-          .insert({
-            receta_id: recetaId,
-            usuario_id: user.id,
-            puntuacion,
-          });
-  
+        const { error } = await supabase.from("recetas_calificaciones").insert({
+          receta_id: recetaId,
+          usuario_id: user.id,
+          puntuacion,
+        });
+
         if (error) throw error;
       }
-  
-      // ✅ CRÍTICO: Actualizar estado local inmediatamente
-      setCalificacionUsuario(puntuacion);
-      
-      // ✅ CRÍTICO: Forzar recarga completa de estadísticas
-      await cargarCalificaciones();
-  
+
+      // ✅ CRÍTICO: Esperar un momento para que los triggers se ejecuten
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // ✅ CRÍTICO: Emitir evento personalizado para forzar recarga
+      window.dispatchEvent(new CustomEvent("recetasActualizadas"));
+
       toast({
-        title: 'Calificación guardada',
-        description: `Has calificado esta receta con ${puntuacion} estrella${puntuacion > 1 ? 's' : ''}`,
+        title: "Calificación guardada",
+        description: `Has calificado esta receta con ${puntuacion} estrella${puntuacion > 1 ? "s" : ""}`,
       });
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.message || 'No se pudo guardar la calificación',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "No se pudo guardar la calificación",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -183,11 +191,11 @@ export function SistemaCalificaciones({
   const mostrarCalificacion = hover || calificacionUsuario;
 
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
+    <div className={cn("flex flex-col gap-2", className)}>
       {/* Estrellas */}
       <div className="flex items-center gap-1">
         {loading ? (
-          <Loader2 className={cn(TAMAÑOS[tamaño], 'animate-spin text-primary')} />
+          <Loader2 className={cn(TAMAÑOS[tamaño], "animate-spin text-primary")} />
         ) : (
           [1, 2, 3, 4, 5].map((estrella) => (
             <button
@@ -198,19 +206,17 @@ export function SistemaCalificaciones({
               onMouseLeave={() => !readonly && setHover(0)}
               onClick={() => handleCalificar(estrella)}
               className={cn(
-                'transition-all duration-150',
-                !readonly && 'hover:scale-110 cursor-pointer',
-                readonly && 'cursor-default'
+                "transition-all duration-150",
+                !readonly && "hover:scale-110 cursor-pointer",
+                readonly && "cursor-default",
               )}
-              aria-label={`Calificar con ${estrella} estrella${estrella > 1 ? 's' : ''}`}
+              aria-label={`Calificar con ${estrella} estrella${estrella > 1 ? "s" : ""}`}
             >
               <Star
                 className={cn(
                   TAMAÑOS[tamaño],
-                  estrella <= mostrarCalificacion
-                    ? 'fill-accent text-accent'
-                    : 'text-muted-foreground',
-                  'transition-colors'
+                  estrella <= mostrarCalificacion ? "fill-accent text-accent" : "text-muted-foreground",
+                  "transition-colors",
                 )}
               />
             </button>
@@ -221,10 +227,10 @@ export function SistemaCalificaciones({
       {/* Estadísticas */}
       {mostrarEstadisticas && estadisticas.total > 0 && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">
-            {estadisticas.promedio.toFixed(1)}
+          <span className="font-semibold text-foreground">{estadisticas.promedio.toFixed(1)}</span>
+          <span>
+            ({estadisticas.total} {estadisticas.total === 1 ? "calificación" : "calificaciones"})
           </span>
-          <span>({estadisticas.total} {estadisticas.total === 1 ? 'calificación' : 'calificaciones'})</span>
         </div>
       )}
 
@@ -243,9 +249,7 @@ export function SistemaCalificaciones({
                   }}
                 />
               </div>
-              <span className="w-8 text-right text-muted-foreground">
-                {estadisticas.distribucion[num] || 0}
-              </span>
+              <span className="w-8 text-right text-muted-foreground">{estadisticas.distribucion[num] || 0}</span>
             </div>
           ))}
         </div>
