@@ -15,6 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
 import { IRecetaConPerfil, IInteraccionUsuario, TDificultad, TVisibilidad, IIngrediente, INutrientesTotales, DIFICULTADES } from '@/types/receta.types';
 import { CopiarRecetaModal } from '@/components/recetas/CopiarRecetaModal';
+import { PromedioEstrellas } from '@/components/recetas/PromedioEstrellas';
 
 export default function Comunidad() {
   const { user } = useAuth();
@@ -283,8 +284,14 @@ export default function Comunidad() {
               <h3 className="text-xl font-bold mb-2 line-clamp-2">{receta.nombre}</h3>
               {receta.descripcion && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{receta.descripcion}</p>}
 
-              <div className="mb-4"><SistemaCalificaciones recetaId={receta.id} tamaño="sm" mostrarEstadisticas={false} /></div>
-
+              <div className="mb-3">
+                <PromedioEstrellas 
+                  promedio={receta.promedio_calificacion || 0}
+                  totalCalificaciones={receta.total_calificaciones || 0}
+                  tamaño="sm"
+                  mostrarTexto={true}
+                />
+              </div>
               <div className="flex gap-2 mt-auto">
                  {/* ✅ NUEVO: Botón Copiar Receta */}
                 {user?.id !== receta.usuario_id && (
