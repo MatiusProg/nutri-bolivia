@@ -61,7 +61,7 @@ export default function RecetasGuardadas() {
           nombre_completo: receta.autor_nombre,
           avatar_url: receta.autor_avatar,
           email: ''
-        }
+        },
         promedio_calificacion: receta.promedio_calificacion || 0,
         total_calificaciones: receta.total_calificaciones || 0
       })) || [];
