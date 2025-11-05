@@ -194,8 +194,13 @@ export default function RecetasGuardadas() {
                 <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{receta.descripcion}</p>
               )}
 
-              <div className="mb-4">
-                <SistemaCalificaciones recetaId={receta.id} tamaño="sm" mostrarEstadisticas={false} />
+              <div className="mb-3">
+                <PromedioEstrellas
+                  promedio={receta.promedio_calificacion || 0}
+                  totalCalificaciones={receta.total_calificaciones || 0}
+                  tamaño="sm"
+                  mostrarTexto={true}
+                />
               </div>
 
               <div className="flex gap-2 mt-auto">
