@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bookmark, Loader2, ChefHat, Clock, Heart, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
-import { IRecetaConPerfil, DIFICULTADES } from '@/types/receta.types';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Bookmark, Loader2, ChefHat, Clock, Heart, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { SistemaCalificaciones } from "@/components/recetas/SistemaCalificaciones";
+import { IRecetaConPerfil, DIFICULTADES } from "@/types/receta.types";
 
 export default function RecetasGuardadas() {
   const { user } = useAuth();
@@ -20,7 +20,7 @@ export default function RecetasGuardadas() {
 
   useEffect(() => {
     if (!user) {
-      navigate('/');
+      navigate("/");
       return;
     }
     loadRecetasGuardadas();
@@ -30,10 +30,10 @@ export default function RecetasGuardadas() {
     try {
       // Obtener IDs de recetas guardadas
       const { data: interacciones, error: interError } = await supabase
-        .from('recetas_interacciones')
-        .select('receta_id')
-        .eq('usuario_id', user?.id)
-        .eq('tipo', 'guardar');
+        .from("recetas_interacciones")
+        .select("receta_id")
+        .eq("usuario_id", user?.id)
+        .eq("tipo", "guardar");
 
       if (interError) throw interError;
 
@@ -47,32 +47,33 @@ export default function RecetasGuardadas() {
 
       // Obtener recetas desde la vista comunidad
       const { data: recetasData, error: recetasError } = await supabase
-        .from('recetas_comunidad')
-        .select('*')
-        .in('id', recetaIds)
-        .order('created_at', { ascending: false });
+        .from("recetas_comunidad")
+        .select("*")
+        .in("id", recetaIds)
+        .order("created_at", { ascending: false });
 
       if (recetasError) throw recetasError;
 
       // Adaptar datos
-      const recetasAdaptadas = recetasData?.map((receta: any) => ({
-        ...receta,
-        perfil: {
-          nombre_completo: receta.autor_nombre,
-          avatar_url: receta.autor_avatar,
-          email: ''
-        }
-        promedio_calificacion: receta.promedio_calificacion || 0,
-        total_calificaciones: receta.total_calificaciones || 0
-      })) || [];
+      const recetasAdaptadas =
+        recetasData?.map((receta: any) => ({
+          ...receta,
+          perfil: {
+            nombre_completo: receta.autor_nombre,
+            avatar_url: receta.autor_avatar,
+            email: "",
+          },
+          promedio_calificacion: receta.promedio_calificacion || 0,
+          total_calificaciones: receta.total_calificaciones || 0,
+        })) || [];
 
       setRecetas(recetasAdaptadas);
     } catch (error: any) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       toast({
-        title: 'Error',
-        description: 'No se pudieron cargar las recetas guardadas',
-        variant: 'destructive'
+        title: "Error",
+        description: "No se pudieron cargar las recetas guardadas",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -86,25 +87,25 @@ export default function RecetasGuardadas() {
     setRemovingId(recetaId);
     try {
       const { error } = await supabase
-        .from('recetas_interacciones')
+        .from("recetas_interacciones")
         .delete()
-        .eq('receta_id', recetaId)
-        .eq('usuario_id', user.id)
-        .eq('tipo', 'guardar');
+        .eq("receta_id", recetaId)
+        .eq("usuario_id", user.id)
+        .eq("tipo", "guardar");
 
       if (error) throw error;
 
       toast({
-        title: 'Receta eliminada',
-        description: 'La receta se quitó de tus guardados'
+        title: "Receta eliminada",
+        description: "La receta se quitó de tus guardados",
       });
 
-      setRecetas(recetas.filter(r => r.id !== recetaId));
+      setRecetas(recetas.filter((r) => r.id !== recetaId));
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: "Error",
         description: error.message,
-        variant: 'destructive'
+        variant: "destructive",
       });
     } finally {
       setRemovingId(null);
@@ -127,11 +128,9 @@ export default function RecetasGuardadas() {
             <Bookmark className="h-8 w-8 text-primary" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Recetas Guardadas
-            </h1>
+            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">Recetas Guardadas</h1>
             <p className="text-muted-foreground mt-1">
-              {recetas.length} {recetas.length === 1 ? 'receta guardada' : 'recetas guardadas'}
+              {recetas.length} {recetas.length === 1 ? "receta guardada" : "recetas guardadas"}
             </p>
           </div>
         </div>
@@ -141,10 +140,8 @@ export default function RecetasGuardadas() {
         <Card className="p-12 text-center">
           <Bookmark className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
           <h3 className="text-xl font-semibold mb-2">No tienes recetas guardadas</h3>
-          <p className="text-muted-foreground mb-6">
-            Explora la comunidad y guarda tus recetas favoritas
-          </p>
-          <Button onClick={() => navigate('/comunidad')} className="gap-2">
+          <p className="text-muted-foreground mb-6">Explora la comunidad y guarda tus recetas favoritas</p>
+          <Button onClick={() => navigate("/comunidad")} className="gap-2">
             <ChefHat className="h-4 w-4" />
             Explorar Comunidad
           </Button>
@@ -164,21 +161,17 @@ export default function RecetasGuardadas() {
                 onClick={(e) => handleRemove(receta.id, e)}
                 disabled={removingId === receta.id}
               >
-                {removingId === receta.id ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <X className="h-4 w-4" />
-                )}
+                {removingId === receta.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
               </Button>
 
               <div className="flex items-center gap-3 mb-4">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={receta.perfil?.avatar_url || undefined} />
-                  <AvatarFallback>{receta.perfil?.nombre_completo?.charAt(0) || 'U'}</AvatarFallback>
+                  <AvatarFallback>{receta.perfil?.nombre_completo?.charAt(0) || "U"}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">
-                    {receta.perfil?.nombre_completo || receta.perfil?.email || 'Usuario'}
+                    {receta.perfil?.nombre_completo || receta.perfil?.email || "Usuario"}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {receta.dificultad && (
@@ -198,9 +191,7 @@ export default function RecetasGuardadas() {
 
               <h3 className="text-xl font-bold mb-2 line-clamp-2">{receta.nombre}</h3>
               {receta.descripcion && (
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                  {receta.descripcion}
-                </p>
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{receta.descripcion}</p>
               )}
 
               <div className="mb-4">
