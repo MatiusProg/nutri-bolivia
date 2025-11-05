@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { SistemaCalificaciones } from "@/components/recetas/SistemaCalificaciones";
 import { IRecetaConPerfil, DIFICULTADES } from "@/types/receta.types";
+import { PromedioEstrellas } from "@/components/recetas/PromedioEstrellas";
 
 export default function RecetasGuardadas() {
   const { user } = useAuth();
