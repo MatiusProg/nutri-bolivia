@@ -25,6 +25,15 @@ export default function RecetasGuardadas() {
       return;
     }
     loadRecetasGuardadas();
+    
+    // Escuchar eventos de actualización
+    const handleRecetasActualizadas = () => {
+      console.log("🔄 Evento recetasActualizadas recibido en RecetasGuardadas");
+      loadRecetasGuardadas();
+    };
+
+    window.addEventListener("recetasActualizadas", handleRecetasActualizadas);
+    return () => window.removeEventListener("recetasActualizadas", handleRecetasActualizadas);
   }, [user, navigate]);
 
   const loadRecetasGuardadas = async () => {
