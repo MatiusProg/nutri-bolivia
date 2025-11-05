@@ -41,70 +41,6 @@ export default function RecetasGuardadas() {
     return () => window.removeEventListener("recetasActualizadas", handleRecetasActualizadas);
   }, [user, navigate]);
 
-  // ✅ Suscripción realtime a cambios en calificaciones
-  useEffect(() => {
-    const channel = supabase
-      .channel('recetas-calificaciones-guardadas')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'recetas_calificaciones' 
-      }, async () => {
-        console.log("🔔 Cambio en calificaciones detectado - recalculando promedios");
-        // Recalcular promedios para las recetas actuales
-        if (recetas.length > 0) {
-          const proms = await recomputarPromediosPara(recetas);
-          setRecetas(prev => prev.map(r => {
-            const calc = proms[r.id];
-            return calc ? {
-              ...r,
-              promedio_calificacion: calc.promedio,
-              total_calificaciones: calc.total,
-            } : r;
-          }));
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [recetas]);
-
-  // ✅ Función para recalcular promedios desde recetas_calificaciones
-  const recomputarPromediosPara = async (recetas: { id: string }[]) => {
-    const ids = recetas.map(r => r.id);
-    if (ids.length === 0) return {};
-
-    const { data, error } = await supabase
-      .from('recetas_calificaciones')
-      .select('receta_id, puntuacion, active')
-      .in('receta_id', ids);
-
-    if (error) {
-      console.error('Error obteniendo calificaciones:', error);
-      return {};
-    }
-
-    // Filtrar solo calificaciones activas
-    const califs = (data || []).filter(c => c.active === true);
-
-    const map: Record<string, { total: number; promedio: number }> = {};
-    const agrupadas: Record<string, number[]> = {};
-    
-    for (const c of califs) {
-      (agrupadas[c.receta_id] ||= []).push(c.puntuacion);
-    }
-    
-    for (const [recetaId, arr] of Object.entries(agrupadas)) {
-      const total = arr.length;
-      const promedio = total ? arr.reduce((a, b) => a + b, 0) / total : 0;
-      map[recetaId] = { total, promedio: Math.round(promedio * 10) / 10 };
-    }
-    
-    return map;
-  };
-
   const loadRecetasGuardadas = async () => {
     try {
       if (!user) {
@@ -129,7 +65,7 @@ export default function RecetasGuardadas() {
   
       const recetaIds = interacciones.map((i: any) => i.receta_id);
   
-      // 2. Cargar recetas desde comunidad
+      // 2. Cargar recetas desde comunidad (YA INCLUYE los promedios)
       const { data: recetasData, error: recetasError } = await supabase
         .from('recetas_comunidad')
         .select('*')
@@ -138,7 +74,16 @@ export default function RecetasGuardadas() {
   
       if (recetasError) throw recetasError;
   
-      // 3. Adaptar datos
+      // 3. DEBUG: Ver datos de la vista
+      recetasData?.forEach(receta => {
+        console.log('🔍 Receta guardada - datos vista:', {
+          nombre: receta.nombre,
+          promedio: receta.promedio_calificacion,
+          total: receta.total_calificaciones
+        });
+      });
+  
+      // 4. Adaptar datos (USAR columnas existentes de la vista)
       const recetasAdaptadas = recetasData?.map((receta: any) => ({
         ...receta,
         perfil: {
@@ -146,30 +91,15 @@ export default function RecetasGuardadas() {
           avatar_url: receta.autor_avatar,
           email: ''
         },
+        // ✅ USAR DIRECTAMENTE las columnas de la vista
         promedio_calificacion: receta.promedio_calificacion || 0,
         total_calificaciones: receta.total_calificaciones || 0,
         contador_likes: receta.contador_likes || 0,
         contador_guardados: receta.contador_guardados || 0
       })) || [];
-
-      // 4. ✅ Recalcular promedios desde recetas_calificaciones
-      console.log("🔢 Recalculando promedios desde recetas_calificaciones...");
-      const proms = await recomputarPromediosPara(recetasAdaptadas);
-      
-      const recetasConPromedios = recetasAdaptadas.map(r => {
-        const calc = proms[r.id];
-        if (calc) {
-          console.log(`📊 ${r.nombre}: Vista=${r.promedio_calificacion}/${r.total_calificaciones} → Calculado=${calc.promedio}/${calc.total}`);
-        }
-        return {
-          ...r,
-          promedio_calificacion: calc?.promedio ?? (Number(r.promedio_calificacion) || 0),
-          total_calificaciones: calc?.total ?? (Number(r.total_calificaciones) || 0),
-        };
-      });
   
-      console.log('📊 Recetas guardadas con promedios recalculados:', recetasConPromedios);
-      setRecetas(recetasConPromedios);
+      console.log('📊 Recetas guardadas con promedios:', recetasAdaptadas);
+      setRecetas(recetasAdaptadas);
   
     } catch (error: any) {
       console.error('Error:', error);

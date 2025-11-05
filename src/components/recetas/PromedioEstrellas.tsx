@@ -41,12 +41,8 @@ export function PromedioEstrellas({
     return () => window.removeEventListener("recetasActualizadas", handleUpdate);
   }, []);
 
-  // ✅ Coercionar a número para evitar problemas con tipos
-  const p = Number(localPromedio) || 0;
-  const t = Number(localTotal) || 0;
-
   // Si no hay calificaciones (solo verificar total)
-  if (t === 0 && p === 0) {
+  if (localTotal === 0 && localPromedio === 0) {
     return (
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <span>⭐ Nuevo</span>
@@ -55,8 +51,8 @@ export function PromedioEstrellas({
   }
 
   // Calcular estrellas visuales
-  const estrellasLlenas = Math.floor(p);
-  const tieneMediaEstrella = p - estrellasLlenas >= 0.3;
+  const estrellasLlenas = Math.floor(localPromedio);
+  const tieneMediaEstrella = localPromedio - estrellasLlenas >= 0.3;
 
   return (
     <div className="flex items-center gap-2">
@@ -71,7 +67,7 @@ export function PromedioEstrellas({
                 ? "fill-yellow-400 text-yellow-400"
                 : estrella === estrellasLlenas + 1 && tieneMediaEstrella
                   ? "fill-yellow-400/50 text-yellow-400"
-                  : "text-gray-300"
+                  : "text-gray-300",
             )}
           />
         ))}
@@ -80,8 +76,8 @@ export function PromedioEstrellas({
       {/* Texto del promedio */}
       {mostrarTexto && (
         <div className="flex items-center gap-1 text-xs">
-          <span className="font-semibold text-foreground">{p.toFixed(1)}</span>
-          <span className="text-muted-foreground">({t})</span>
+          <span className="font-semibold text-foreground">{localPromedio.toFixed(1)}</span>
+          <span className="text-muted-foreground">({localTotal})</span>
         </div>
       )}
     </div>
