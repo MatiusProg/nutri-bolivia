@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { SistemaCalificaciones } from "@/components/recetas/SistemaCalificaciones";
 import { IRecetaConPerfil, DIFICULTADES } from "@/types/receta.types";
+import { PromedioEstrellas } from "@/components/recetas/PromedioEstrellas";
 
 export default function RecetasGuardadas() {
   const { user } = useAuth();
@@ -29,69 +30,69 @@ export default function RecetasGuardadas() {
   const loadRecetasGuardadas = async () => {
     try {
       if (!user) {
-        navigate("/");
+        navigate('/');
         return;
       }
-
+  
       // 1. Obtener IDs de recetas guardadas
       const { data: interacciones, error: interError } = await supabase
-        .from("recetas_interacciones")
-        .select("receta_id")
-        .eq("usuario_id", user.id)
-        .eq("tipo", "guardar");
-
+        .from('recetas_interacciones')
+        .select('receta_id')
+        .eq('usuario_id', user.id)
+        .eq('tipo', 'guardar');
+  
       if (interError) throw interError;
-
+  
       if (!interacciones || interacciones.length === 0) {
         setRecetas([]);
         setLoading(false);
         return;
       }
-
+  
       const recetaIds = interacciones.map((i: any) => i.receta_id);
-
+  
       // 2. Cargar recetas desde comunidad (YA INCLUYE los promedios)
       const { data: recetasData, error: recetasError } = await supabase
-        .from("recetas_comunidad")
-        .select("*")
-        .in("id", recetaIds)
-        .order("created_at", { ascending: false });
-
+        .from('recetas_comunidad')
+        .select('*')
+        .in('id', recetaIds)
+        .order('created_at', { ascending: false });
+  
       if (recetasError) throw recetasError;
-
+  
       // 3. DEBUG: Ver datos de la vista
-      recetasData?.forEach((receta) => {
-        console.log("🔍 Receta guardada - datos vista:", {
+      recetasData?.forEach(receta => {
+        console.log('🔍 Receta guardada - datos vista:', {
           nombre: receta.nombre,
           promedio: receta.promedio_calificacion,
-          total: receta.total_calificaciones,
+          total: receta.total_calificaciones
         });
       });
-
+  
       // 4. Adaptar datos (USAR columnas existentes de la vista)
-      const recetasAdaptadas =
-        recetasData?.map((receta: any) => ({
-          ...receta,
-          perfil: {
-            nombre_completo: receta.autor_nombre,
-            avatar_url: receta.autor_avatar,
-            email: "",
-          },
-          // ✅ USAR DIRECTAMENTE las columnas de la vista
-          promedio_calificacion: receta.promedio_calificacion || 0,
-          total_calificaciones: receta.total_calificaciones || 0,
-          contador_likes: receta.contador_likes || 0,
-          contador_guardados: receta.contador_guardados || 0,
-        })) || [];
-
-      console.log("📊 Recetas guardadas con promedios:", recetasAdaptadas);
+      const recetasAdaptadas = recetasData?.map((receta: any) => ({
+        ...receta,
+        perfil: {
+          nombre_completo: receta.autor_nombre,
+          avatar_url: receta.autor_avatar,
+          email: ''
+        },
+        // ✅ USAR DIRECTAMENTE las columnas de la vista
+        promedio_calificacion: receta.promedio_calificacion || 0,
+        total_calificaciones: receta.total_calificaciones || 0,
+        contador_likes: receta.contador_likes || 0,
+        contador_guardados: receta.contador_guardados || 0
+      })) || [];
+  
+      console.log('📊 Recetas guardadas con promedios:', recetasAdaptadas);
       setRecetas(recetasAdaptadas);
+  
     } catch (error: any) {
-      console.error("Error:", error);
+      console.error('Error:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron cargar las recetas guardadas",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudieron cargar las recetas guardadas',
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
