@@ -52,6 +52,9 @@ export function SistemaCalificaciones({
     distribucion: {},
   });
 
+  // ✅ AÑADIR: Estado para saber si el usuario es el dueño de la receta
+  const [esOwner, setEsOwner] = useState(false);
+
   useEffect(() => {
     cargarCalificaciones();
   }, [recetaId]);
@@ -63,7 +66,7 @@ export function SistemaCalificaciones({
         .from("recetas_calificaciones")
         .select("puntuacion")
         .eq("receta_id", recetaId)
-        .eq("active", true); // ← Solo calificaciones activas
+        .eq("active", true);
 
       if (errorTodas) throw errorTodas;
 
@@ -80,12 +83,11 @@ export function SistemaCalificaciones({
         const promedio = suma / todasCalificaciones.length;
 
         setEstadisticas({
-          promedio: Math.round(promedio * 10) / 10, // Redondear a 1 decimal
+          promedio: Math.round(promedio * 10) / 10,
           total: todasCalificaciones.length,
           distribucion,
         });
       } else {
-        // Resetear estadísticas si no hay calificaciones
         setEstadisticas({
           promedio: 0,
           total: 0,
@@ -105,10 +107,16 @@ export function SistemaCalificaciones({
 
         if (errorUsuario) throw errorUsuario;
         setCalificacionUsuario(calUsuario?.puntuacion || 0);
+
+        // ✅ AÑADIR: Verificar si el usuario es el dueño de la receta
+        const { data: recetaData } = await supabase.from("recetas").select("usuario_id").eq("id", recetaId).single();
+
+        if (recetaData) {
+          setEsOwner(recetaData.usuario_id === user.id);
+        }
       }
     } catch (error) {
       console.error("Error cargando calificaciones:", error);
-      // No mostrar toast para evitar spam en lista de recetas
     }
   };
 
@@ -172,6 +180,12 @@ export function SistemaCalificaciones({
 
       // ✅ CRÍTICO: Emitir evento personalizado para forzar recarga
       window.dispatchEvent(new CustomEvent("recetasActualizadas"));
+
+      // ✅ Actualizar estado local inmediatamente
+      setCalificacionUsuario(puntuacion);
+
+      // ✅ Recargar estadísticas
+      await cargarCalificaciones();
 
       toast({
         title: "Calificación guardada",
