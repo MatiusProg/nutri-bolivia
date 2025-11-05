@@ -42,35 +42,76 @@ export default function Comunidad() {
     }
   }, [user, recetas]);
 
-    const loadRecetas = async () => {
+  const loadRecetas = async () => {
     try {
-      const { data, error } = await supabase
+      console.log('🔄 Cargando recetas con promedios...');
+      
+      // 1. Cargar recetas desde la vista comunidad
+      const { data: recetasData, error: recetasError } = await supabase
         .from('recetas_comunidad')
         .select('*')
         .order('created_at', { ascending: false });
   
-      if (error) throw error;
+      if (recetasError) throw recetasError;
   
-    // ADAPTAR datos de la vista al tipo esperado
-    const recetasAdaptadas = data?.map(receta => ({
-      ...receta,
-      ingredientes: receta.ingredientes as unknown as IIngrediente[],
-      nutrientes_totales: receta.nutrientes_totales as unknown as INutrientesTotales,
-      visibilidad: receta.visibilidad as TVisibilidad,
-      dificultad: receta.dificultad as TDificultad | null,
-      etiquetas: receta.etiquetas as string[] | null,
-      es_duplicada: receta.es_duplicada ?? false,
-      perfil: {
-        nombre_completo: receta.autor_nombre,
-        avatar_url: receta.autor_avatar,
-        email: '' // o obtener de otra fuente si está disponible
+      if (!recetasData || recetasData.length === 0) {
+        setRecetas([]);
+        setLoading(false);
+        return;
       }
-    })) || [];
-
-    console.log('✅ Recetas adaptadas:', recetasAdaptadas);
-    setRecetas(recetasAdaptadas);
-    } catch (error) {
-      console.error('❌ Error:', error);
+  
+      console.log('📊 Recetas cargadas:', recetasData.length);
+  
+      // 2. Cargar los promedios de calificaciones desde la tabla recetas
+      const { data: promediosData, error: promediosError } = await supabase
+        .from('recetas')
+        .select('id, promedio_calificacion, total_calificaciones')
+        .in('id', recetasData.map(r => r.id));
+  
+      if (promediosError) {
+        console.error('Error cargando promedios:', promediosError);
+        // Continuar sin promedios en caso de error
+      }
+  
+      // 3. Crear mapa rápido de promedios
+      const promediosMap = new Map();
+      promediosData?.forEach(receta => {
+        promediosMap.set(receta.id, {
+          promedio: receta.promedio_calificacion || 0,
+          total: receta.total_calificaciones || 0
+        });
+      });
+  
+      console.log('🗺️ Mapa de promedios:', promediosMap);
+  
+      // 4. Combinar datos
+      const recetasAdaptadas = recetasData.map(receta => {
+        const promedioInfo = promediosMap.get(receta.id) || { promedio: 0, total: 0 };
+        
+        return {
+          ...receta,
+          ingredientes: receta.ingredientes as unknown as IIngrediente[],
+          nutrientes_totales: receta.nutrientes_totales as unknown as INutrientesTotales,
+          visibilidad: receta.visibilidad as TVisibilidad,
+          dificultad: receta.dificultad as TDificultad | null,
+          etiquetas: receta.etiquetas as string[] | null,
+          es_duplicada: receta.es_duplicada ?? false,
+          perfil: {
+            nombre_completo: receta.autor_nombre,
+            avatar_url: receta.autor_avatar,
+            email: ''
+          },
+          // ✅ AÑADIR LOS PROMEDIOS DIRECTAMENTE A LA RECETA
+          promedio_calificacion: promedioInfo.promedio,
+          total_calificaciones: promedioInfo.total
+        };
+      });
+  
+      console.log('✅ Recetas finales con promedios:', recetasAdaptadas);
+      setRecetas(recetasAdaptadas);
+  
+    } catch (error: any) {
+      console.error('❌ Error cargando recetas:', error);
       toast({ 
         title: 'Error', 
         description: 'No se pudieron cargar las recetas', 
