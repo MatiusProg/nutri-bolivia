@@ -42,7 +42,7 @@ export function PromedioEstrellas({
   }, []);
 
   // Si no hay calificaciones (solo verificar total)
-  if (localTotal === 0 && localPromedio === 0) {
+  if (localTotal === 0) {
     return (
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <span>⭐ Nuevo</span>
