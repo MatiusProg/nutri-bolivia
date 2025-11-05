@@ -26,10 +26,11 @@ export default function RecetasGuardadas() {
     loadRecetasGuardadas();
   }, [user, navigate]);
 
+  // Añadir este useEffect
   useEffect(() => {
     const handleRecetasActualizadas = () => {
-      console.log("🔄 Evento recibido: recargando recetas...");
-      loadRecetas();
+      console.log("🔄 Evento recibido: recargando recetas guardadas...");
+      loadRecetasGuardadas();
     };
 
     window.addEventListener("recetasActualizadas", handleRecetasActualizadas);
