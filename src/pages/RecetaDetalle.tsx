@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, ChefHat, User, Heart, Bookmark, Loader2, Edit, Trash2 } from 'lucide-react';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +70,7 @@ export default function RecetaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { trackRecipeView } = useAnalytics();
   const [receta, setReceta] = useState<Receta | null>(null);
   const [ingredientesDetallados, setIngredientesDetallados] = useState<IngredienteDetallado[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,8 +86,10 @@ export default function RecetaDetalle() {
     if (id) {
       cargarReceta();
       if (user) cargarInteracciones();
+      // Track recipe view
+      trackRecipeView(id);
     }
-  }, [id, user]);
+  }, [id, user, trackRecipeView]);
 
   const cargarReceta = async () => {
     try {
