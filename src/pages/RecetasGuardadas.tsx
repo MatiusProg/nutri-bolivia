@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client-unsafe";
 import { toast } from "@/hooks/use-toast";
 import { SistemaCalificaciones } from "@/components/recetas/SistemaCalificaciones";
 import { IRecetaConPerfil, DIFICULTADES } from "@/types/receta.types";
