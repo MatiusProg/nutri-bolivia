@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bookmark, Loader2, ChefHat, Clock, Heart, X } from "lucide-react";
+import { RecetaCardImagen } from "@/components/recetas/RecetaCardImagen";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -184,66 +185,73 @@ export default function RecetasGuardadas() {
           {recetas.map((receta) => (
             <Card
               key={receta.id}
-              className="p-6 hover:shadow-lg transition-all flex flex-col cursor-pointer relative"
+              className="p-0 hover:shadow-lg transition-all flex flex-col cursor-pointer overflow-hidden relative"
               onClick={() => navigate(`/receta/${receta.id}`)}
             >
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-2 h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="absolute top-2 right-2 h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 z-10"
                 onClick={(e) => handleRemove(receta.id, e)}
                 disabled={removingId === receta.id}
               >
                 {removingId === receta.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
               </Button>
 
-              <div className="flex items-center gap-3 mb-4">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={receta.perfil?.avatar_url || undefined} />
-                  <AvatarFallback>{receta.perfil?.nombre_completo?.charAt(0) || "U"}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">
-                    {receta.perfil?.nombre_completo || receta.perfil?.email || "Usuario"}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {receta.dificultad && (
-                      <Badge variant="outline" className="text-xs">
-                        {DIFICULTADES[receta.dificultad]}
-                      </Badge>
-                    )}
-                    {receta.tiempo_preparacion && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {receta.tiempo_preparacion} min
-                      </span>
-                    )}
+              {/* Imagen de la receta */}
+              <div className="p-4 pb-0">
+                <RecetaCardImagen recetaId={receta.id} />
+              </div>
+
+              <div className="p-6 pt-2">
+                <div className="flex items-center gap-3 mb-4">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={receta.perfil?.avatar_url || undefined} />
+                    <AvatarFallback>{receta.perfil?.nombre_completo?.charAt(0) || "U"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">
+                      {receta.perfil?.nombre_completo || receta.perfil?.email || "Usuario"}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {receta.dificultad && (
+                        <Badge variant="outline" className="text-xs">
+                          {DIFICULTADES[receta.dificultad]}
+                        </Badge>
+                      )}
+                      {receta.tiempo_preparacion && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {receta.tiempo_preparacion} min
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <h3 className="text-xl font-bold mb-2 line-clamp-2">{receta.nombre}</h3>
-              {receta.descripcion && (
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{receta.descripcion}</p>
-              )}
+                <h3 className="text-xl font-bold mb-2 line-clamp-2">{receta.nombre}</h3>
+                {receta.descripcion && (
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{receta.descripcion}</p>
+                )}
 
-              <div className="mb-3">
-                <PromedioEstrellas
-                  promedio={receta.promedio_calificacion || 0}
-                  totalCalificaciones={receta.total_calificaciones || 0}
-                  tamaño="sm"
-                  mostrarTexto={true}
-                />
-              </div>
-
-              <div className="flex gap-2 mt-auto">
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Heart className="h-4 w-4" />
-                  <span>{receta.contador_likes || 0}</span>
+                <div className="mb-3">
+                  <PromedioEstrellas
+                    promedio={receta.promedio_calificacion || 0}
+                    totalCalificaciones={receta.total_calificaciones || 0}
+                    tamaño="sm"
+                    mostrarTexto={true}
+                  />
                 </div>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Bookmark className="h-4 w-4 fill-current" />
-                  <span>{receta.contador_guardados || 0}</span>
+
+                <div className="flex gap-2 mt-auto">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Heart className="h-4 w-4" />
+                    <span>{receta.contador_likes || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Bookmark className="h-4 w-4 fill-current" />
+                    <span>{receta.contador_guardados || 0}</span>
+                  </div>
                 </div>
               </div>
             </Card>
