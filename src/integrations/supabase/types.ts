@@ -14,7 +14,156 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      eventos_analytics: {
+        Row: {
+          created_at: string | null
+          evento_tipo: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          receta_id: string | null
+          user_agent: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          evento_tipo: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          receta_id?: string | null
+          user_agent?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          evento_tipo?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          receta_id?: string | null
+          user_agent?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      metricas_diarias: {
+        Row: {
+          created_at: string | null
+          fecha: string
+          id: string
+          metadata: Json | null
+          total_guardados: number | null
+          total_likes: number | null
+          total_recetas_creadas: number | null
+          total_recetas_vistas: number | null
+          total_vistas_pagina: number | null
+          usuarios_activos: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          fecha: string
+          id?: string
+          metadata?: Json | null
+          total_guardados?: number | null
+          total_likes?: number | null
+          total_recetas_creadas?: number | null
+          total_recetas_vistas?: number | null
+          total_vistas_pagina?: number | null
+          usuarios_activos?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          fecha?: string
+          id?: string
+          metadata?: Json | null
+          total_guardados?: number | null
+          total_likes?: number | null
+          total_recetas_creadas?: number | null
+          total_recetas_vistas?: number | null
+          total_vistas_pagina?: number | null
+          usuarios_activos?: number | null
+        }
+        Relationships: []
+      }
+      recetas_imagenes: {
+        Row: {
+          created_at: string | null
+          es_principal: boolean | null
+          id: string
+          imagen_url: string
+          orden: number | null
+          receta_id: string
+          storage_path: string
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          es_principal?: boolean | null
+          id?: string
+          imagen_url: string
+          orden?: number | null
+          receta_id: string
+          storage_path: string
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string | null
+          es_principal?: boolean | null
+          id?: string
+          imagen_url?: string
+          orden?: number | null
+          receta_id?: string
+          storage_path?: string
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: []
+      }
+      recetas_videos: {
+        Row: {
+          created_at: string | null
+          embed_url: string
+          id: string
+          plataforma: string
+          receta_id: string
+          tipo_video: string | null
+          updated_at: string | null
+          usuario_id: string
+          video_id: string
+          video_url: string
+          video_url_normalizada: string
+        }
+        Insert: {
+          created_at?: string | null
+          embed_url: string
+          id?: string
+          plataforma: string
+          receta_id: string
+          tipo_video?: string | null
+          updated_at?: string | null
+          usuario_id: string
+          video_id: string
+          video_url: string
+          video_url_normalizada: string
+        }
+        Update: {
+          created_at?: string | null
+          embed_url?: string
+          id?: string
+          plataforma?: string
+          receta_id?: string
+          tipo_video?: string | null
+          updated_at?: string | null
+          usuario_id?: string
+          video_id?: string
+          video_url?: string
+          video_url_normalizada?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
