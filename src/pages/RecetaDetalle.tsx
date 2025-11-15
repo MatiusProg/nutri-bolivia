@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, ChefHat, User, Heart, Bookmark, Loader2, Edit, Trash2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useRecetaMultimedia } from '@/hooks/useRecetaMultimedia';
+import { VideoPreview } from '@/components/recetas/VideoPreview';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -71,6 +73,7 @@ export default function RecetaDetalle() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { trackRecipeView } = useAnalytics();
+  const { multimedia, loading: multimediaLoading } = useRecetaMultimedia(id);
   const [receta, setReceta] = useState<Receta | null>(null);
   const [ingredientesDetallados, setIngredientesDetallados] = useState<IngredienteDetallado[]>([]);
   const [loading, setLoading] = useState(true);
@@ -390,6 +393,37 @@ export default function RecetaDetalle() {
             )}
           </div>
         </div>
+
+        {/* Sistema de Calificaciones */}
+        <Card className="p-6 mb-6">
+          <SistemaCalificaciones recetaId={receta.id} tamaño="lg" mostrarEstadisticas={true} readonly={esOwner} />
+        </Card>
+
+        {/* Sección Multimedia */}
+        {!multimediaLoading && (multimedia.imagen_url || multimedia.video_id) && (
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            {/* Imagen */}
+            {multimedia.imagen_url && (
+              <Card className="p-0 overflow-hidden">
+                <img
+                  src={multimedia.imagen_url}
+                  alt={receta.nombre}
+                  className="w-full h-auto object-cover"
+                />
+              </Card>
+            )}
+            
+            {/* Video */}
+            {multimedia.video_id && multimedia.embed_url && (
+              <Card className="p-0 overflow-hidden">
+                <VideoPreview
+                  embedUrl={multimedia.embed_url}
+                  plataforma={(multimedia.plataforma as 'tiktok' | 'youtube') || 'youtube'}
+                />
+              </Card>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

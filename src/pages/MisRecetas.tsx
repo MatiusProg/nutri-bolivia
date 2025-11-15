@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChefHat, Plus, Edit, Trash2, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { RecetaCardImagen } from '@/components/recetas/RecetaCardImagen';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -200,10 +201,16 @@ export default function MisRecetas() {
           {recetas.map((receta) => (
             <Card 
               key={receta.id} 
-              className="p-6 hover:shadow-lg transition-all cursor-pointer"
+              className="p-0 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
               onClick={() => navigate(`/receta/${receta.id}`)}
             >
-              <div className="flex items-start justify-between mb-4">
+              {/* Imagen de la receta */}
+              <div className="p-4 pb-0">
+                <RecetaCardImagen recetaId={receta.id} />
+              </div>
+
+              <div className="p-6 pt-2">
+                <div className="flex items-start justify-between mb-4">
                 <Badge variant={receta.visibilidad === 'publica' ? 'default' : 'secondary'}>
                   {receta.visibilidad === 'publica' ? '🌐 Pública' : '🔒 Privada'}
                 </Badge>
@@ -275,6 +282,7 @@ export default function MisRecetas() {
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
+              </div>
               </div>
             </Card>
           ))}

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Heart, Bookmark, Loader2, Search, SlidersHorizontal, Clock, ChefHat, Copy } from "lucide-react";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { RecetaCardImagen } from "@/components/recetas/RecetaCardImagen";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -309,36 +310,42 @@ export default function Comunidad() {
           {recetasFiltradas.map((receta) => (
             <Card
               key={receta.id}
-              className="p-6 hover:shadow-lg transition-all flex flex-col cursor-pointer"
+              className="p-0 hover:shadow-lg transition-all flex flex-col cursor-pointer overflow-hidden"
               onClick={() => {
                 trackRecipeView(receta.id);
                 navigate(`/receta/${receta.id}`);
               }}
             >
-              <div className="flex items-center gap-3 mb-4">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={receta.perfil?.avatar_url || undefined} />
-                  <AvatarFallback>{receta.perfil?.nombre_completo?.charAt(0) || "U"}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">
-                    {receta.perfil?.nombre_completo || receta.perfil?.email || "Usuario"}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {receta.dificultad && (
-                      <Badge variant="outline" className="text-xs">
-                        {DIFICULTADES[receta.dificultad]}
-                      </Badge>
-                    )}
-                    {receta.tiempo_preparacion && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {receta.tiempo_preparacion} min
-                      </span>
-                    )}
+              {/* Imagen de la receta */}
+              <div className="p-4 pb-0">
+                <RecetaCardImagen recetaId={receta.id} />
+              </div>
+
+              <div className="p-6 pt-2">
+                <div className="flex items-center gap-3 mb-4">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={receta.perfil?.avatar_url || undefined} />
+                    <AvatarFallback>{receta.perfil?.nombre_completo?.charAt(0) || "U"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">
+                      {receta.perfil?.nombre_completo || receta.perfil?.email || "Usuario"}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {receta.dificultad && (
+                        <Badge variant="outline" className="text-xs">
+                          {DIFICULTADES[receta.dificultad]}
+                        </Badge>
+                      )}
+                      {receta.tiempo_preparacion && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {receta.tiempo_preparacion} min
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
               <h3 className="text-xl font-bold mb-2 line-clamp-2">{receta.nombre}</h3>
               {receta.descripcion && (
@@ -402,6 +409,7 @@ export default function Comunidad() {
                   )}
                   {receta.contador_guardados || 0}
                 </Button>
+              </div>
               </div>
             </Card>
           ))}
