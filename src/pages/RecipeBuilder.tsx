@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client-unsafe';
+import { lovableCloud } from '@/integrations/lovable-cloud/client';
 import { toast } from '@/hooks/use-toast';
 import { ImagenUpload } from '@/components/recetas/ImagenUpload';
 import { VideoInput } from '@/components/recetas/VideoInput';
@@ -172,7 +173,8 @@ export default function RecipeBuilder() {
         cantidad_g,
       }));
 
-      const { error } = await (supabase as any)
+      // Guardar receta y obtener el ID
+      const { data: recetaData, error } = await (supabase as any)
         .from('recetas')
         .insert([{
           usuario_id: user.id,
@@ -181,9 +183,43 @@ export default function RecipeBuilder() {
           ingredientes: ingredientesData as any,
           nutrientes_totales: nutrientes as any,
           visibilidad: 'privada',
-        }]);
+        }])
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Guardar imagen en Cloud si existe
+      if (recetaData?.id && imagenUrl && imagenStoragePath) {
+        const { error: imagenError } = await lovableCloud
+          .from('recetas_imagenes')
+          .insert({
+            receta_id: recetaData.id,
+            imagen_url: imagenUrl,
+            storage_path: imagenStoragePath,
+            usuario_id: user.id,
+            es_principal: true,
+          });
+
+        if (imagenError) console.error('Error guardando imagen:', imagenError);
+      }
+
+      // Guardar video en Cloud si existe
+      if (recetaData?.id && videoData) {
+        const { error: videoError } = await lovableCloud
+          .from('recetas_videos')
+          .insert({
+            receta_id: recetaData.id,
+            video_id: videoData.videoId,
+            video_url: videoData.videoUrl,
+            video_url_normalizada: videoData.normalizedUrl,
+            embed_url: videoData.embedUrl,
+            plataforma: videoData.platform,
+            usuario_id: user.id,
+          });
+
+        if (videoError) console.error('Error guardando video:', videoError);
+      }
 
       toast({
         title: '¡Receta guardada!',
