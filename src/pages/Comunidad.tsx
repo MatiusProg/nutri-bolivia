@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Heart, Bookmark, Loader2, Search, SlidersHorizontal, Clock, ChefHat, Copy } from "lucide-react";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,7 @@ type RecetaConPromedios = IRecetaConPerfil & {
 export default function Comunidad() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { trackPageView, trackRecipeView } = useAnalytics();
   const [recetas, setRecetas] = useState<RecetaConPromedios[]>([]);
   const [loading, setLoading] = useState(true);
   const [userInteractions, setUserInteractions] = useState<Record<string, IInteraccionUsuario>>({});
@@ -47,6 +49,7 @@ export default function Comunidad() {
   const [ordenarPor, setOrdenarPor] = useState<"fecha" | "popularidad" | "tiempo">("fecha");
 
   useEffect(() => {
+    trackPageView('Comunidad');
     loadRecetas();
     
     // Escuchar eventos de actualización
@@ -57,7 +60,7 @@ export default function Comunidad() {
 
     window.addEventListener("recetasActualizadas", handleRecetasActualizadas);
     return () => window.removeEventListener("recetasActualizadas", handleRecetasActualizadas);
-  }, []);
+  }, [trackPageView]);
 
   useEffect(() => {
     if (user) {
@@ -307,7 +310,10 @@ export default function Comunidad() {
             <Card
               key={receta.id}
               className="p-6 hover:shadow-lg transition-all flex flex-col cursor-pointer"
-              onClick={() => navigate(`/receta/${receta.id}`)}
+              onClick={() => {
+                trackRecipeView(receta.id);
+                navigate(`/receta/${receta.id}`);
+              }}
             >
               <div className="flex items-center gap-3 mb-4">
                 <Avatar className="h-10 w-10">

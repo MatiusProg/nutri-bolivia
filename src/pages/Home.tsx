@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Leaf } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const { user, signInWithGoogle } = useAuth();
+  const { trackPageView } = useAnalytics();
+
+  useEffect(() => {
+    trackPageView('Home');
+  }, [trackPageView]);
 
   return (
     <div className="min-h-screen bg-background">

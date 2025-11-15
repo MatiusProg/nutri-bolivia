@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client-unsafe';
 import { toast } from '@/hooks/use-toast';
+import { ImagenUpload } from '@/components/recetas/ImagenUpload';
+import { VideoInput } from '@/components/recetas/VideoInput';
 
 type Alimento = any; // Will be updated when Supabase types regenerate
 import {
@@ -45,6 +47,11 @@ export default function RecipeBuilder() {
   const [recipeName, setRecipeName] = useState('');
   const [description, setDescription] = useState('');
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
+  
+  // Estados para multimedia (almacenar la info para guardar después)
+  const [imagenUrl, setImagenUrl] = useState<string | null>(null);
+  const [imagenStoragePath, setImagenStoragePath] = useState<string | null>(null);
+  const [videoData, setVideoData] = useState<any>(null);
   
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -245,6 +252,45 @@ export default function RecipeBuilder() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Multimedia Section */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Multimedia (Opcional)</h2>
+            <div className="space-y-6">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Imagen de la receta
+                </label>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Añade una imagen atractiva de tu receta para compartirla con la comunidad
+                </p>
+                <ImagenUpload
+                  imagenActual={imagenUrl}
+                  onImagenCargada={(url, storagePath) => {
+                    setImagenUrl(url);
+                    setImagenStoragePath(storagePath);
+                  }}
+                  onImagenEliminada={() => {
+                    setImagenUrl(null);
+                    setImagenStoragePath(null);
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Video de TikTok o YouTube
+                </label>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Comparte el video de preparación de tu receta
+                </p>
+                <VideoInput
+                  videoActual={videoData}
+                  onVideoValidado={(data) => setVideoData(data)}
+                  onVideoEliminado={() => setVideoData(null)}
                 />
               </div>
             </div>
