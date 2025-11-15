@@ -38,6 +38,8 @@ export interface IReceta {
   tiempo_preparacion: number | null;
   dificultad: TDificultad | null;
   etiquetas: string[] | null;
+  imagen_url?: string | null;
+  video_id?: string | null;
   created_at: string;
   updated_at: string;
 }
