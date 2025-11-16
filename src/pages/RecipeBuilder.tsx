@@ -204,17 +204,17 @@ export default function RecipeBuilder() {
         if (imagenError) console.error('Error guardando imagen:', imagenError);
       }
 
-      // Guardar video en Cloud si existe
+      // Guardar video si existe
       if (recetaData?.id && videoData) {
-        const { error: videoError } = await lovableCloud
+        const { error: videoError } = await (supabase as any)
           .from('recetas_videos')
           .insert({
             receta_id: recetaData.id,
             video_id: videoData.videoId,
-            video_url: videoData.videoUrl,
-            video_url_normalizada: videoData.normalizedUrl,
+            video_url: videoData.videoUrlNormalizada,
+            video_url_normalizada: videoData.videoUrlNormalizada,
             embed_url: videoData.embedUrl,
-            plataforma: videoData.platform,
+            plataforma: videoData.plataforma,
             usuario_id: user.id,
           });
 
