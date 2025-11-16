@@ -3,7 +3,7 @@ import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { lovableCloud } from '@/integrations/lovable-cloud/client';
+
 import { supabase } from '@/integrations/supabase/client-unsafe';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -110,9 +110,9 @@ export function ImagenUpload({
       const objectUrl = URL.createObjectURL(compressedFile);
       setPreview(objectUrl);
 
-      // Subir a Lovable Cloud Storage
+      // Subir a Storage (mismo backend)
       const fileName = `${user.id}/${Date.now()}_${compressedFile.name}`;
-      const { data: uploadData, error: uploadError } = await lovableCloud.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('recetas-imagenes')
         .upload(fileName, compressedFile, {
           cacheControl: '3600',
@@ -122,9 +122,11 @@ export function ImagenUpload({
       if (uploadError) throw uploadError;
 
       // Obtener URL pública
-      const { data: { publicUrl } } = lovableCloud.storage
+      const { data: publicUrlData } = supabase.storage
         .from('recetas-imagenes')
         .getPublicUrl(fileName);
+
+      const publicUrl = publicUrlData.publicUrl;
 
       // Guardar referencia en la tabla si hay recetaId
       if (recetaId) {
