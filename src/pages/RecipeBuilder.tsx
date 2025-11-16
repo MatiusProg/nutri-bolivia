@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client-unsafe';
-import { lovableCloud } from '@/integrations/lovable-cloud/client';
+
 import { toast } from '@/hooks/use-toast';
 import { ImagenUpload } from '@/components/recetas/ImagenUpload';
 import { VideoInput } from '@/components/recetas/VideoInput';
@@ -191,7 +191,7 @@ export default function RecipeBuilder() {
 
       // Guardar imagen en Cloud si existe
       if (recetaData?.id && imagenUrl && imagenStoragePath) {
-        const { error: imagenError } = await lovableCloud
+        const { error: imagenError } = await (supabase as any)
           .from('recetas_imagenes')
           .insert({
             receta_id: recetaData.id,

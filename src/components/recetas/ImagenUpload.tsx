@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { lovableCloud } from '@/integrations/lovable-cloud/client';
+import { supabase } from '@/integrations/supabase/client-unsafe';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
@@ -127,7 +128,7 @@ export function ImagenUpload({
 
       // Guardar referencia en la tabla si hay recetaId
       if (recetaId) {
-        const { error: dbError } = await lovableCloud
+        const { error: dbError } = await supabase
           .from('recetas_imagenes')
           .insert({
             receta_id: recetaId,
@@ -168,7 +169,7 @@ export function ImagenUpload({
     try {
       // Si hay recetaId, eliminar de la base de datos
       if (recetaId) {
-        await lovableCloud
+        await supabase
           .from('recetas_imagenes')
           .delete()
           .eq('receta_id', recetaId)
