@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { lovableCloud } from '@/integrations/lovable-cloud/client';
+import { supabase } from '@/integrations/supabase/client-unsafe';
 
 interface MultimediaData {
   imagen_url: string | null;
@@ -31,7 +31,7 @@ export function useRecetaMultimedia(recetaId: string | undefined) {
     const loadMultimedia = async () => {
       try {
         // Cargar imagen
-        const { data: imagenData } = await lovableCloud
+        const { data: imagenData } = await supabase
           .from('recetas_imagenes')
           .select('imagen_url')
           .eq('receta_id', recetaId)
@@ -39,7 +39,7 @@ export function useRecetaMultimedia(recetaId: string | undefined) {
           .maybeSingle();
 
         // Cargar video
-        const { data: videoData } = await lovableCloud
+        const { data: videoData } = await supabase
           .from('recetas_videos')
           .select('video_id, video_url, embed_url, plataforma')
           .eq('receta_id', recetaId)
