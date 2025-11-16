@@ -77,7 +77,17 @@ export function ImagenUpload({
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!file) return;
+
+    if (!user) {
+      toast({
+        title: 'Inicia sesión',
+        description: 'Debes iniciar sesión para subir imágenes.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
 
     // Validar tipo de archivo
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];

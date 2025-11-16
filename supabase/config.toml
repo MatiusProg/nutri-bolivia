@@ -1,1 +1,5 @@
 project_id = "cikrrifmawnptypogrdl"
+
+[functions.resolve-tiktok]
+verify_jwt = false
+
