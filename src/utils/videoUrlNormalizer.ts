@@ -18,50 +18,60 @@ export interface VideoNormalizationResult {
  */
 async function normalizeTikTokUrl(url: string): Promise<VideoNormalizationResult> {
   try {
-    let finalUrl = url;
+    // Detectar enlaces cortos: vm.tiktok.com, vt.tiktok.com o tiktok.com/t/
+    const isShort = /(?:vm|vt)\.tiktok\.com|tiktok\.com\/t\//.test(url);
 
-    // Si es un enlace corto vm.tiktok.com, seguir el redirect
-    if (url.includes('vm.tiktok.com') || url.includes('vt.tiktok.com')) {
+    if (isShort) {
+      const base = import.meta.env.VITE_SUPABASE_URL;
+      const anon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
       try {
-        // Intentar obtener la URL final
-        const response = await fetch(url, { 
-          method: 'HEAD', 
-          redirect: 'follow',
-          mode: 'no-cors' 
+        const resp = await fetch(`${base}/functions/v1/resolve-tiktok`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${anon}`,
+            'apikey': anon,
+          },
+          body: JSON.stringify({ url }),
         });
-        finalUrl = response.url || url;
+        const json = await resp.json();
+
+        if (!resp.ok || !json.success || !json.data) {
+          return {
+            success: false,
+            error: 'No se pudo resolver el enlace corto de TikTok. Abre el enlace y copia la URL completa.'
+          };
+        }
+
+        const { videoId, embedUrl, videoUrlNormalizada } = json.data as { videoId: string; embedUrl: string; videoUrlNormalizada: string };
+        return {
+          success: true,
+          data: {
+            plataforma: 'tiktok',
+            videoId,
+            embedUrl,
+            videoUrlNormalizada,
+          }
+        };
       } catch {
-        // Si falla el fetch, intentar extraer del enlace original
-        finalUrl = url;
+        return {
+          success: false,
+          error: 'No se pudo resolver el enlace corto de TikTok. Intenta con la URL larga.'
+        };
       }
     }
 
-    // Extraer video ID de diferentes formatos de TikTok
-    // Formatos soportados:
-    // - https://www.tiktok.com/@username/video/1234567890
-    // - https://www.tiktok.com/t/XXXXX/
-    // - https://vm.tiktok.com/XXXXX/
-    let videoId = '';
-    
-    // Intentar extraer de /video/XXXXXX
-    const videoMatch = finalUrl.match(/\/video\/(\d+)/);
-    if (videoMatch) {
-      videoId = videoMatch[1];
-    } else {
-      // Intentar extraer del path para enlaces cortos
-      const shortMatch = finalUrl.match(/tiktok\.com\/(?:t|@[\w.]+\/video)\/([A-Za-z0-9]+)/);
-      if (shortMatch) {
-        videoId = shortMatch[1];
-      }
-    }
-
-    if (!videoId) {
+    // Enlaces largos: https://www.tiktok.com/@usuario/video/1234567890
+    const videoMatch = url.match(/\/video\/(\d+)/);
+    if (!videoMatch) {
       return {
         success: false,
-        error: 'No se pudo extraer el ID del video de TikTok. Verifica que la URL sea válida.'
+        error: 'No se pudo extraer el ID del video de TikTok. Verifica la URL.'
       };
     }
 
+    const videoId = videoMatch[1];
     const embedUrl = `https://www.tiktok.com/embed/v2/${videoId}`;
     const videoUrlNormalizada = `https://www.tiktok.com/video/${videoId}`;
 
