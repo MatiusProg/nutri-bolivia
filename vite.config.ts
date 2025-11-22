@@ -15,4 +15,6 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  envDir: '.',           // Buscar archivos .env en la raíz del proyecto
+  envPrefix: 'VITE_',    // Solo cargar variables que empiecen con VITE_
 }));
