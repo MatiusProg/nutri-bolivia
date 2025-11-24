@@ -253,28 +253,40 @@ export function EditarRecetaModal({
   };
 
   const resetearInteracciones = async (recetaId: string) => {
+    console.log('🔄 Iniciando reseteo de interacciones para receta:', recetaId);
+    
     try {
       // 1. Eliminar interacciones (likes y guardados)
-      const { error: interaccionesError } = await (supabase as any)
+      console.log('📍 Eliminando interacciones...');
+      const { data: interaccionesData, error: interaccionesError } = await (supabase as any)
         .from('recetas_interacciones')
         .delete()
-        .eq('receta_id', recetaId);
+        .eq('receta_id', recetaId)
+        .select();
 
       if (interaccionesError) {
-        console.error('Error eliminando interacciones:', interaccionesError);
+        console.error('❌ Error eliminando interacciones:', interaccionesError);
+      } else {
+        console.log('✅ Interacciones eliminadas:', interaccionesData?.length || 0);
       }
 
       // 2. Eliminar calificaciones
-      const { error: calificacionesError } = await (supabase as any)
+      console.log('📍 Eliminando calificaciones...');
+      const { data: calificacionesData, error: calificacionesError } = await (supabase as any)
         .from('recetas_calificaciones')
         .delete()
-        .eq('receta_id', recetaId);
+        .eq('receta_id', recetaId)
+        .select();
 
       if (calificacionesError) {
-        console.error('Error eliminando calificaciones:', calificacionesError);
+        console.error('❌ Error eliminando calificaciones:', calificacionesError);
+        console.error('Detalles del error:', JSON.stringify(calificacionesError));
+      } else {
+        console.log('✅ Calificaciones eliminadas:', calificacionesData?.length || 0);
       }
 
       // 3. Resetear contadores en la tabla recetas
+      console.log('📍 Reseteando contadores...');
       const { error: updateError } = await (supabase as any)
         .from('recetas')
         .update({ 
@@ -285,10 +297,14 @@ export function EditarRecetaModal({
         .eq('id', recetaId);
 
       if (updateError) {
-        console.error('Error reseteando contadores:', updateError);
+        console.error('❌ Error reseteando contadores:', updateError);
+      } else {
+        console.log('✅ Contadores reseteados correctamente');
       }
+
+      console.log('✅ Reseteo completado');
     } catch (error) {
-      console.error('Error en resetearInteracciones:', error);
+      console.error('❌ Error crítico en resetearInteracciones:', error);
       throw error;
     }
   };
@@ -339,7 +355,20 @@ export function EditarRecetaModal({
       // Calcular nutrientes actualizados
       const nutrientesTotales = calcularNutrientesTotales(ingredientes);
 
-      // 1. Actualizar receta básica
+      // 1. Actualizar receta básica - PRESERVAR nutrientes de ingredientes
+      const ingredientesParaGuardar = ingredientes.map(ing => {
+        // Si el ingrediente ya tiene nutrientes, preservarlos
+        // Si no, usar un objeto vacío (para ingredientes nuevos)
+        const nutrientesCompletos = ing.nutrientes || {};
+        
+        return {
+          id_alimento: ing.id_alimento,
+          nombre_alimento: ing.nombre_alimento,
+          cantidad_g: ing.cantidad_g,
+          nutrientes: nutrientesCompletos,
+        };
+      });
+
       const { error: recetaError } = await (supabase as any)
         .from('recetas')
         .update({
@@ -349,12 +378,7 @@ export function EditarRecetaModal({
           tiempo_preparacion: tiempoPreparacion ? parseInt(tiempoPreparacion) : null,
           dificultad: dificultad || null,
           etiquetas: etiquetasSeleccionadas.length > 0 ? etiquetasSeleccionadas : null,
-          ingredientes: ingredientes.map(ing => ({
-            id_alimento: ing.id_alimento,
-            nombre_alimento: ing.nombre_alimento,
-            cantidad_g: ing.cantidad_g,
-            nutrientes: ing.nutrientes || {},
-          })),
+          ingredientes: ingredientesParaGuardar,
           nutrientes_totales: nutrientesTotales,
           updated_at: new Date().toISOString(),
         })
