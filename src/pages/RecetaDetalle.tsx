@@ -152,21 +152,25 @@ export default function RecetaDetalle() {
     if (!ingredientes || ingredientes.length === 0) return;
 
     try {
-      const ids = ingredientes.map((ing: any) => ing.alimento_id);
+      // Usar id_alimento (correcto) en lugar de alimento_id
+      const ids = ingredientes.map((ing: any) => ing.id_alimento);
       const { data: alimentos } = await supabase
         .from('alimentos')
         .select('*')
         .in('id_alimento', ids);
 
       const detallados: IngredienteDetallado[] = ingredientes.map((ing: any) => {
-        const alimento = alimentos?.find((a: any) => a.id_alimento === ing.alimento_id);
+        const alimento = alimentos?.find((a: any) => a.id_alimento === ing.id_alimento);
+        
+        // Si el ingrediente YA tiene nutrientes guardados, usarlos directamente
+        const nutrientesGuardados = ing.nutrientes;
         const factor = ing.cantidad_g / 100;
 
         return {
-          nombre: ing.nombre || alimento?.nombre_alimento || 'Desconocido',
+          nombre: ing.nombre_alimento || alimento?.nombre_alimento || 'Desconocido',
           cantidad_g: ing.cantidad_g,
           alimento,
-          nutrientes: {
+          nutrientes: nutrientesGuardados || {
             energia_kcal: (alimento?.energia_kcal || 0) * factor,
             proteinas_g: (alimento?.proteinas_g || 0) * factor,
             grasas_g: (alimento?.grasas_g || 0) * factor,
