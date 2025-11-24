@@ -46,7 +46,6 @@ import {
 } from '@/components/ui/command';
 import { supabase } from '@/integrations/supabase/client-unsafe';
 import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 import { 
   IReceta, 
   IIngrediente,
@@ -75,7 +74,6 @@ export function EditarRecetaModal({
   onRecetaActualizada,
   recetasPrivadasCount,
 }: EditarRecetaModalProps) {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showIngredientesWarning, setShowIngredientesWarning] = useState(false);
@@ -258,27 +256,53 @@ export function EditarRecetaModal({
     console.log('🔄 Iniciando reseteo de interacciones para receta:', recetaId);
     
     try {
-      if (!user?.id) {
-        throw new Error('Usuario no autenticado');
+      // 1. Eliminar interacciones (likes y guardados)
+      console.log('📍 Eliminando interacciones...');
+      const { data: interaccionesData, error: interaccionesError } = await (supabase as any)
+        .from('recetas_interacciones')
+        .delete()
+        .eq('receta_id', recetaId)
+        .select();
+
+      if (interaccionesError) {
+        console.error('❌ Error eliminando interacciones:', interaccionesError);
+      } else {
+        console.log('✅ Interacciones eliminadas:', interaccionesData?.length || 0);
       }
 
-      // Llamar a la función SQL que hace todo el reseteo
-      const { data, error } = await (supabase as any)
-        .rpc('resetear_stats_receta', {
-          _receta_id: recetaId,
-          _usuario_id: user.id
-        });
+      // 2. Eliminar calificaciones
+      console.log('📍 Eliminando calificaciones...');
+      const { data: calificacionesData, error: calificacionesError } = await (supabase as any)
+        .from('recetas_calificaciones')
+        .delete()
+        .eq('receta_id', recetaId)
+        .select();
 
-      if (error) {
-        console.error('❌ Error llamando a resetear_stats_receta:', error);
-        throw error;
+      if (calificacionesError) {
+        console.error('❌ Error eliminando calificaciones:', calificacionesError);
+        console.error('Detalles del error:', JSON.stringify(calificacionesError));
+      } else {
+        console.log('✅ Calificaciones eliminadas:', calificacionesData?.length || 0);
       }
 
-      console.log('✅ Reseteo completado:', data);
-      console.log(`   📊 Interacciones eliminadas: ${data.interacciones_eliminadas}`);
-      console.log(`   ⭐ Calificaciones eliminadas: ${data.calificaciones_eliminadas}`);
-      
-      return data;
+      // 3. Resetear contadores en la tabla recetas
+      console.log('📍 Reseteando contadores...');
+      const { error: updateError } = await (supabase as any)
+        .from('recetas')
+        .update({ 
+          contador_likes: 0, 
+          contador_guardados: 0,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', recetaId);
+
+      if (updateError) {
+        console.error('❌ Error reseteando contadores:', updateError);
+      } else {
+        console.log('✅ Contadores reseteados correctamente');
+      }
+
+      console.log('✅ Reseteo completado');
     } catch (error) {
       console.error('❌ Error crítico en resetearInteracciones:', error);
       throw error;
