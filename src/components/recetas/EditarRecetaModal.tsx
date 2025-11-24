@@ -253,27 +253,44 @@ export function EditarRecetaModal({
   };
 
   const resetearInteracciones = async (recetaId: string) => {
-    // 1. Eliminar interacciones
-    await supabase
-      .from('recetas_interacciones')
-      .delete()
-      .eq('receta_id', recetaId);
+    try {
+      // 1. Eliminar interacciones (likes y guardados)
+      const { error: interaccionesError } = await (supabase as any)
+        .from('recetas_interacciones')
+        .delete()
+        .eq('receta_id', recetaId);
 
-    // 2. Eliminar calificaciones
-    await supabase
-      .from('recetas_calificaciones')
-      .delete()
-      .eq('receta_id', recetaId);
+      if (interaccionesError) {
+        console.error('Error eliminando interacciones:', interaccionesError);
+      }
 
-    // 3. Resetear contadores
-    await supabase
-      .from('recetas')
-      .update({ 
-        contador_likes: 0, 
-        contador_guardados: 0,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', recetaId);
+      // 2. Eliminar calificaciones
+      const { error: calificacionesError } = await (supabase as any)
+        .from('recetas_calificaciones')
+        .delete()
+        .eq('receta_id', recetaId);
+
+      if (calificacionesError) {
+        console.error('Error eliminando calificaciones:', calificacionesError);
+      }
+
+      // 3. Resetear contadores en la tabla recetas
+      const { error: updateError } = await (supabase as any)
+        .from('recetas')
+        .update({ 
+          contador_likes: 0, 
+          contador_guardados: 0,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', recetaId);
+
+      if (updateError) {
+        console.error('Error reseteando contadores:', updateError);
+      }
+    } catch (error) {
+      console.error('Error en resetearInteracciones:', error);
+      throw error;
+    }
   };
 
   const handleGuardar = async () => {
@@ -336,6 +353,7 @@ export function EditarRecetaModal({
             id_alimento: ing.id_alimento,
             nombre_alimento: ing.nombre_alimento,
             cantidad_g: ing.cantidad_g,
+            nutrientes: ing.nutrientes || {},
           })),
           nutrientes_totales: nutrientesTotales,
           updated_at: new Date().toISOString(),
