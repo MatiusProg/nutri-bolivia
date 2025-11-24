@@ -88,6 +88,7 @@ export function ImagenUpload({
       return;
     }
 
+    console.log('📸 Iniciando subida de imagen:', { fileName: file.name, size: file.size });
 
     // Validar tipo de archivo
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -114,14 +115,18 @@ export function ImagenUpload({
 
     try {
       // Comprimir imagen
+      console.log('🔄 Comprimiendo imagen...');
       const compressedFile = await compressImage(file);
+      console.log('✅ Imagen comprimida:', { size: compressedFile.size });
 
       // Crear preview
       const objectUrl = URL.createObjectURL(compressedFile);
       setPreview(objectUrl);
 
-      // Subir a Storage (mismo backend)
+      // Subir a Storage
       const fileName = `${user.id}/${Date.now()}_${compressedFile.name}`;
+      console.log('⬆️ Subiendo a bucket recetas-imagenes:', fileName);
+      
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('recetas-imagenes')
         .upload(fileName, compressedFile, {
@@ -129,7 +134,12 @@ export function ImagenUpload({
           upsert: false,
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Error en upload:', uploadError);
+        throw uploadError;
+      }
+      
+      console.log('✅ Upload exitoso:', uploadData);
 
       // Obtener URL pública
       const { data: publicUrlData } = supabase.storage
