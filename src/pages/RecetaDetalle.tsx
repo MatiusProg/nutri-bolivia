@@ -33,6 +33,7 @@ import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificacione
 import { DIFICULTADES } from '@/types/receta.types';
 import { Copy } from 'lucide-react';
 import { CopiarRecetaModal } from '@/components/recetas/CopiarRecetaModal';
+import { NutrientesExpandibles } from '@/components/recetas/NutrientesExpandibles';
 
 interface Receta {
   id: string;
@@ -485,31 +486,10 @@ export default function RecetaDetalle() {
         <div className="space-y-6">
           <Card className="p-6 sticky top-4">
             <h2 className="text-2xl font-bold mb-4">Nutrientes Totales</h2>
-            <div className="space-y-4">
-              <div className="p-4 bg-primary/10 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">Energía Total</p>
-                <p className="text-3xl font-bold text-primary">{nutrientes.energia_kcal?.toFixed(0) || 0} kcal</p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                  <span className="font-medium">Proteínas</span>
-                  <span className="text-lg font-semibold">{nutrientes.proteinas_g?.toFixed(1) || 0}g</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                  <span className="font-medium">Carbohidratos</span>
-                  <span className="text-lg font-semibold">{nutrientes.hidratoscarbonototal_g?.toFixed(1) || 0}g</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                  <span className="font-medium">Grasas</span>
-                  <span className="text-lg font-semibold">{nutrientes.grasas_g?.toFixed(1) || 0}g</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                  <span className="font-medium">Fibra</span>
-                  <span className="text-lg font-semibold">{nutrientes.fibracruda_g?.toFixed(1) || 0}g</span>
-                </div>
-              </div>
-            </div>
+            <NutrientesExpandibles 
+              nutrientes={nutrientes}
+              ingredientesDetallados={ingredientesDetallados}
+            />
           </Card>
 
           {/* Calificaciones */}
