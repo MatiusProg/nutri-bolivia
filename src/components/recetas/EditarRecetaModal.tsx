@@ -388,19 +388,27 @@ export function EditarRecetaModal({
 
       // 2. Actualizar imagen si cambió
       if (imagenUrl && imagenStoragePath) {
+        // Primero eliminar imágenes existentes
+        await (supabase as any)
+          .from('recetas_imagenes')
+          .delete()
+          .eq('receta_id', receta.id);
+
+        // Luego insertar la nueva
         const { error: imagenError } = await (supabase as any)
           .from('recetas_imagenes')
-          .upsert({
+          .insert({
             receta_id: receta.id,
             imagen_url: imagenUrl,
             storage_path: imagenStoragePath,
             usuario_id: receta.usuario_id,
             es_principal: true,
-          }, {
-            onConflict: 'receta_id,es_principal'
           });
 
-        if (imagenError) console.error('Error guardando imagen:', imagenError);
+        if (imagenError) {
+          console.error('Error guardando imagen:', imagenError);
+          throw imagenError;
+        }
       }
 
       // 3. Actualizar video si cambió
