@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, ChefHat, User, Heart, Bookmark, Loader2, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Clock, ChefHat, User, Heart, Bookmark, Loader2, Edit, Trash2, Flag, Copy } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useRecetaMultimedia } from '@/hooks/useRecetaMultimedia';
 import { VideoPreview } from '@/components/recetas/VideoPreview';
@@ -31,8 +31,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { SistemaCalificaciones } from '@/components/recetas/SistemaCalificaciones';
 import { DIFICULTADES } from '@/types/receta.types';
-import { Copy } from 'lucide-react';
 import { CopiarRecetaModal } from '@/components/recetas/CopiarRecetaModal';
+import { ReportarRecetaModal } from '@/components/recetas/ReportarRecetaModal';
 import { NutrientesExpandibles } from '@/components/recetas/NutrientesExpandibles';
 
 interface Receta {
@@ -83,8 +83,8 @@ export default function RecetaDetalle() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  //Nuevos estados
   const [copiarModalOpen, setCopiarModalOpen] = useState(false);
+  const [reportarModalOpen, setReportarModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -367,14 +367,13 @@ export default function RecetaDetalle() {
               </>
             ) : (
               <>
-                {/* ✅ NUEVO: Botón Copiar */}
                 <Button
                   variant="outline"
                   onClick={() => setCopiarModalOpen(true)}
                   className="gap-2"
                 >
                   <Copy className="h-4 w-4" />
-                  Copiar Receta
+                  Copiar
                 </Button>
                 <Button
                   variant={hasLiked ? 'default' : 'outline'}
@@ -394,6 +393,17 @@ export default function RecetaDetalle() {
                   {actionLoading === 'save' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bookmark className={`h-4 w-4 ${hasSaved ? 'fill-current' : ''}`} />}
                   Guardar
                 </Button>
+                {user && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setReportarModalOpen(true)}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Reportar receta"
+                  >
+                    <Flag className="h-4 w-4" />
+                  </Button>
+                )}
               </>
             )}
           </div>
@@ -522,12 +532,22 @@ export default function RecetaDetalle() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {/* ✅ NUEVO: Modal de Copiar Receta */}
+      {/* Modal de Copiar Receta */}
       {receta && (
         <CopiarRecetaModal
           open={copiarModalOpen}
           onOpenChange={setCopiarModalOpen}
           recetaOriginal={receta}
+        />
+      )}
+
+      {/* Modal de Reportar Receta */}
+      {receta && (
+        <ReportarRecetaModal
+          open={reportarModalOpen}
+          onOpenChange={setReportarModalOpen}
+          recetaId={receta.id}
+          recetaNombre={receta.nombre}
         />
       )}
     </div>

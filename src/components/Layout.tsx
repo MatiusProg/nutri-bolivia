@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { Leaf, User, LogOut, Search, ChefHat, Users, Menu, Bookmark } from 'lucide-react';
+import { Leaf, User, LogOut, Search, ChefHat, Users, Menu, Bookmark, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,11 +16,13 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import AuthModal from '@/components/AuthModal';
 import { CentroNotificaciones } from '@/components/notificaciones/CentroNotificaciones';
 
 export default function Layout() {
   const { user, signOut } = useAuth();
+  const { isStaff } = useUserRole();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -209,6 +211,14 @@ export default function Layout() {
                           Mi Perfil
                         </Link>
                       </DropdownMenuItem>
+                      {isStaff() && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin/reportes" className="cursor-pointer">
+                            <Shield className="mr-2 h-4 w-4" />
+                            Panel Admin
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={signOut} className="cursor-pointer">
                         <LogOut className="mr-2 h-4 w-4" />
                         Cerrar Sesión
