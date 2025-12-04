@@ -1,3 +1,4 @@
+import { useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client-unsafe';
 import { useAuth } from '@/hooks/useAuth';
@@ -32,23 +33,36 @@ export function useUserRole() {
       return (data || []) as UserRole[];
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutos de cache
+    staleTime: 5 * 60 * 1000,
   });
 
-  const hasRole = (role: AppRole): boolean => {
-    return roles?.some(r => r.role === role) || false;
-  };
+  // Valores memoizados (no funciones) para evitar re-renders infinitos
+  const isAdmin = useMemo(() => 
+    roles?.some(r => r.role === 'admin') || false, 
+    [roles]
+  );
+  
+  const isModerador = useMemo(() => 
+    roles?.some(r => r.role === 'moderador') || false, 
+    [roles]
+  );
+  
+  const isStaff = useMemo(() => 
+    isAdmin || isModerador, 
+    [isAdmin, isModerador]
+  );
 
-  const isAdmin = (): boolean => hasRole('admin');
-  const isModerador = (): boolean => hasRole('moderador');
-  const isStaff = (): boolean => isAdmin() || isModerador();
+  // hasRole sigue siendo función porque recibe parámetro
+  const hasRole = useCallback((role: AppRole): boolean => {
+    return roles?.some(r => r.role === role) || false;
+  }, [roles]);
 
   return {
     roles,
     isLoading,
     hasRole,
-    isAdmin,
-    isModerador,
-    isStaff,
+    isAdmin,      // booleano
+    isModerador,  // booleano
+    isStaff,      // booleano
   };
 }

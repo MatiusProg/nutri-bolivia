@@ -145,6 +145,16 @@ export default function Layout() {
                           <User className="h-5 w-5" />
                           Mi Perfil
                         </Link>
+                        {isStaff && (
+                          <Link
+                            to="/admin/reportes"
+                            className="flex items-center gap-3 text-base hover:text-primary transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Shield className="h-5 w-5" />
+                            Panel Admin
+                          </Link>
+                        )}
                         <button
                           onClick={() => {
                             signOut();
@@ -211,7 +221,7 @@ export default function Layout() {
                           Mi Perfil
                         </Link>
                       </DropdownMenuItem>
-                      {isStaff() && (
+                      {isStaff && (
                         <DropdownMenuItem asChild>
                           <Link to="/admin/reportes" className="cursor-pointer">
                             <Shield className="mr-2 h-4 w-4" />

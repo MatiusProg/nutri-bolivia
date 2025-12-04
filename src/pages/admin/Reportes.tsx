@@ -62,7 +62,7 @@ export default function AdminReportes() {
   const [notasEditando, setNotasEditando] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!rolesLoading && !isStaff()) {
+    if (!rolesLoading && !isStaff) {
       toast({
         title: 'Acceso denegado',
         description: 'No tienes permisos para acceder a esta página',
@@ -73,9 +73,10 @@ export default function AdminReportes() {
   }, [rolesLoading, isStaff, navigate]);
 
   useEffect(() => {
-    if (isStaff()) {
+    if (isStaff) {
       cargarReportes();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtroEstado, isStaff]);
 
   const cargarReportes = async () => {
@@ -170,7 +171,7 @@ export default function AdminReportes() {
     );
   }
 
-  if (!isStaff()) {
+  if (!isStaff) {
     return null;
   }
 
