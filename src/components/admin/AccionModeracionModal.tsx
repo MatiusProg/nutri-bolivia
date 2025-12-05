@@ -101,19 +101,25 @@ export function AccionModeracionModal({
     try {
       const usuarioDuenoId = reporte.receta?.usuario_id;
 
-      // 1. Ejecutar acción sobre la receta
+      // 1. Ejecutar acción sobre la receta usando funciones RPC con SECURITY DEFINER
       if (accion === 'eliminar') {
-        const { error } = await supabase
-          .from('recetas')
-          .delete()
-          .eq('id', reporte.receta_id);
-        if (error) throw error;
+        const { data, error } = await supabase.rpc('admin_eliminar_receta', {
+          p_receta_id: reporte.receta_id,
+          p_admin_id: user.id,
+        });
+        if (error) {
+          console.error('Error al eliminar:', error);
+          throw new Error(error.message || 'No se pudo eliminar la receta. Verifica que tienes permisos de admin.');
+        }
       } else if (accion === 'hacer_privada') {
-        const { error } = await supabase
-          .from('recetas')
-          .update({ visibilidad: 'privada' })
-          .eq('id', reporte.receta_id);
-        if (error) throw error;
+        const { data, error } = await supabase.rpc('admin_hacer_receta_privada', {
+          p_receta_id: reporte.receta_id,
+          p_moderador_id: user.id,
+        });
+        if (error) {
+          console.error('Error al hacer privada:', error);
+          throw new Error(error.message || 'No se pudo hacer privada la receta. Verifica que tienes permisos de moderación.');
+        }
       }
       // solicitar_cambios no modifica la receta
 
