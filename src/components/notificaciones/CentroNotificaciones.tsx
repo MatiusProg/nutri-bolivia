@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, Check, Loader2, X } from 'lucide-react';
+import { Bell, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -18,20 +18,22 @@ import { toast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-type TipoNotificacion = 'like' | 'guardado' | 'calificacion' | 'comentario';
+type TipoNotificacion = 'like' | 'guardado' | 'calificacion' | 'comentario' | 'moderacion';
 
 interface INotificacion {
   id: string;
   usuario_id: string;
   tipo: TipoNotificacion;
-  titulo: string;
   mensaje: string;
   leida: boolean;
+  receta_id: string | null;
+  usuario_actor_id: string | null;
   metadata: {
     receta_id?: string;
     receta_nombre?: string;
     usuario_origen?: string;
     calificacion?: number;
+    accion_moderacion?: string;
   } | null;
   created_at: string;
 }
@@ -41,6 +43,15 @@ const ICONOS_TIPO: Record<TipoNotificacion, string> = {
   guardado: '🔖',
   calificacion: '⭐',
   comentario: '💬',
+  moderacion: '⚠️',
+};
+
+const TITULOS_TIPO: Record<TipoNotificacion, string> = {
+  like: 'Nuevo like',
+  guardado: 'Receta guardada',
+  calificacion: 'Nueva calificación',
+  comentario: 'Nuevo comentario',
+  moderacion: 'Aviso de moderación',
 };
 
 export function CentroNotificaciones() {
@@ -152,6 +163,17 @@ export function CentroNotificaciones() {
     }
   };
 
+  const getTitulo = (notificacion: INotificacion): string => {
+    // Para moderación, usar el metadata si existe
+    if (notificacion.tipo === 'moderacion' && notificacion.metadata?.accion_moderacion) {
+      const accion = notificacion.metadata.accion_moderacion;
+      if (accion === 'eliminar') return '⚠️ Tu receta fue eliminada';
+      if (accion === 'hacer_privada') return '🔒 Tu receta fue restringida';
+      if (accion === 'solicitar_cambios') return '✏️ Se requieren cambios';
+    }
+    return TITULOS_TIPO[notificacion.tipo] || 'Notificación';
+  };
+
   const noLeidas = notificaciones.filter(n => !n.leida).length;
   const notificacionesFiltradas =
     filtroTipo === 'todas'
@@ -196,7 +218,7 @@ export function CentroNotificaciones() {
             >
               Todas
             </Button>
-            {(['like', 'guardado', 'calificacion', 'comentario'] as TipoNotificacion[]).map(
+            {(['like', 'guardado', 'calificacion', 'comentario', 'moderacion'] as TipoNotificacion[]).map(
               (tipo) => (
                 <Button
                   key={tipo}
@@ -240,7 +262,11 @@ export function CentroNotificaciones() {
                   <Card
                     key={notificacion.id}
                     className={`p-4 cursor-pointer transition-colors ${
-                      !notificacion.leida ? 'bg-primary/5 border-primary/20' : ''
+                      !notificacion.leida 
+                        ? notificacion.tipo === 'moderacion'
+                          ? 'bg-destructive/10 border-destructive/30'
+                          : 'bg-primary/5 border-primary/20' 
+                        : ''
                     }`}
                     onClick={() => !notificacion.leida && marcarComoLeida(notificacion.id)}
                   >
@@ -251,15 +277,22 @@ export function CentroNotificaciones() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <p className="font-semibold text-sm line-clamp-1">
-                            {notificacion.titulo}
+                            {getTitulo(notificacion)}
                           </p>
                           {!notificacion.leida && (
-                            <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+                            <span className={`h-2 w-2 rounded-full flex-shrink-0 mt-1 ${
+                              notificacion.tipo === 'moderacion' ? 'bg-destructive' : 'bg-primary'
+                            }`} />
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-3">
                           {notificacion.mensaje}
                         </p>
+                        {notificacion.metadata?.receta_nombre && (
+                          <p className="text-xs text-muted-foreground mt-1 italic">
+                            Receta: {notificacion.metadata.receta_nombre}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground mt-2">
                           {formatDistanceToNow(new Date(notificacion.created_at), {
                             addSuffix: true,

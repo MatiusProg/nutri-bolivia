@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Shield, AlertTriangle, CheckCircle, XCircle, Clock, Eye, Loader2 } from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, XCircle, Clock, Eye, Loader2, Gavel } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client-unsafe';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { MOTIVOS_REPORTE, ESTADOS_REPORTE, MotivoReporte, EstadoReporte } from '@/types/reportes.types';
+import { AccionModeracionModal } from '@/components/admin/AccionModeracionModal';
 
 interface ReporteConDetalles {
   id: string;
@@ -60,6 +61,10 @@ export default function AdminReportes() {
   const [filtroEstado, setFiltroEstado] = useState<EstadoReporte | 'todos'>('pendiente');
   const [actualizando, setActualizando] = useState<string | null>(null);
   const [notasEditando, setNotasEditando] = useState<Record<string, string>>({});
+  
+  // Estado para modal de acción
+  const [modalAccionAbierto, setModalAccionAbierto] = useState(false);
+  const [reporteSeleccionado, setReporteSeleccionado] = useState<ReporteConDetalles | null>(null);
 
   useEffect(() => {
     if (!rolesLoading && !isStaff) {
@@ -100,8 +105,8 @@ export default function AdminReportes() {
       
       for (const reporte of reportesData || []) {
         const [recetaRes, reportadorRes] = await Promise.all([
-          supabase.from('recetas').select('nombre, usuario_id').eq('id', reporte.receta_id).single(),
-          supabase.from('perfiles').select('nombre_completo, email').eq('id', reporte.usuario_reportador_id).single(),
+          supabase.from('recetas').select('nombre, usuario_id').eq('id', reporte.receta_id).maybeSingle(),
+          supabase.from('perfiles').select('nombre_completo, email').eq('id', reporte.usuario_reportador_id).maybeSingle(),
         ]);
 
         reportesConDetalles.push({
@@ -161,6 +166,11 @@ export default function AdminReportes() {
     } finally {
       setActualizando(null);
     }
+  };
+
+  const abrirModalAccion = (reporte: ReporteConDetalles) => {
+    setReporteSeleccionado(reporte);
+    setModalAccionAbierto(true);
   };
 
   if (rolesLoading || loading) {
@@ -262,12 +272,16 @@ export default function AdminReportes() {
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-lg">
-                      <Link
-                        to={`/receta/${reporte.receta_id}`}
-                        className="hover:underline"
-                      >
-                        {reporte.receta?.nombre || 'Receta eliminada'}
-                      </Link>
+                      {reporte.receta ? (
+                        <Link
+                          to={`/receta/${reporte.receta_id}`}
+                          className="hover:underline"
+                        >
+                          {reporte.receta.nombre}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground italic">Receta eliminada</span>
+                      )}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
                       Reportado por: {reporte.reportador?.nombre_completo || reporte.reportador?.email || 'Usuario'}
@@ -305,18 +319,30 @@ export default function AdminReportes() {
                   )}
                 </div>
 
-                {/* Notas de moderación */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Notas de moderación</label>
-                  <Textarea
-                    placeholder="Agregar notas internas sobre este reporte..."
-                    value={notasEditando[reporte.id] ?? reporte.notas_moderacion ?? ''}
-                    onChange={(e) =>
-                      setNotasEditando({ ...notasEditando, [reporte.id]: e.target.value })
-                    }
-                    rows={2}
-                  />
-                </div>
+                {/* Notas de moderación (solo para reportes no resueltos) */}
+                {reporte.estado !== 'resuelto' && reporte.estado !== 'rechazado' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Notas internas</label>
+                    <Textarea
+                      placeholder="Agregar notas internas sobre este reporte..."
+                      value={notasEditando[reporte.id] ?? reporte.notas_moderacion ?? ''}
+                      onChange={(e) =>
+                        setNotasEditando({ ...notasEditando, [reporte.id]: e.target.value })
+                      }
+                      rows={2}
+                    />
+                  </div>
+                )}
+
+                {/* Mostrar notas si ya está resuelto */}
+                {(reporte.estado === 'resuelto' || reporte.estado === 'rechazado') && reporte.notas_moderacion && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Resolución</label>
+                    <p className="text-sm bg-muted/50 p-3 rounded-lg">
+                      {reporte.notas_moderacion}
+                    </p>
+                  </div>
+                )}
 
                 {/* Acciones */}
                 {reporte.estado !== 'resuelto' && reporte.estado !== 'rechazado' && (
@@ -336,19 +362,20 @@ export default function AdminReportes() {
                         Marcar en revisión
                       </Button>
                     )}
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => actualizarEstado(reporte.id, 'resuelto')}
-                      disabled={actualizando === reporte.id}
-                    >
-                      {actualizando === reporte.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                      )}
-                      Resolver
-                    </Button>
+                    
+                    {/* Botón principal: Tomar acción */}
+                    {reporte.receta && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => abrirModalAccion(reporte)}
+                        disabled={actualizando === reporte.id}
+                      >
+                        <Gavel className="h-4 w-4 mr-2" />
+                        Tomar acción
+                      </Button>
+                    )}
+                    
                     <Button
                       size="sm"
                       variant="secondary"
@@ -360,8 +387,9 @@ export default function AdminReportes() {
                       ) : (
                         <XCircle className="h-4 w-4 mr-2" />
                       )}
-                      Rechazar
+                      Rechazar reporte
                     </Button>
+                    
                     <Button
                       size="sm"
                       variant="outline"
@@ -378,6 +406,14 @@ export default function AdminReportes() {
           ))}
         </div>
       )}
+
+      {/* Modal de acción de moderación */}
+      <AccionModeracionModal
+        open={modalAccionAbierto}
+        onOpenChange={setModalAccionAbierto}
+        reporte={reporteSeleccionado}
+        onAccionCompletada={cargarReportes}
+      />
     </div>
   );
 }
